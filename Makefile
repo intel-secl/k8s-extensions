@@ -23,3 +23,6 @@ all: installer
 .PHONY: clean
 clean:
 	@rm -rf out
+	@rm -rf custom-controller
+	@rm -rf extended-scheduler
+	@rm -rf k8s-extensions-build
