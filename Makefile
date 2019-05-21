@@ -2,7 +2,7 @@
 DESCRIPTION="ISecL K8S Extensions"
 
 
-VERSION := 1.0-SNAPSHOT
+VERSION := 1.0
 BUILD := `date +%FT%T%z`
 
 # LDFLAGS
@@ -15,7 +15,7 @@ installer:
 	mkdir -p out/k8s-extensions
 	dist/linux/build-k8s-extensions.sh
 	cp -r certificate-generation-scripts extended-scheduler custom-controller policy.json isecl-k8s-extensions.sh install.sh out/k8s-extensions/
-	makeself out/k8s-extensions out/isecl-k8s-extensions.bin "k8s extensions installer $(VERSION)" ./install.sh
+	makeself out/k8s-extensions out/isecl-k8s-extensions-$(VERSION).bin "k8s extensions installer $(VERSION)" ./install.sh
 
 all: installer
 
