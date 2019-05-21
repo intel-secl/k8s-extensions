@@ -14,7 +14,7 @@ LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.Build=${BUILD}"
 installer:
 	mkdir -p out/k8s-extensions
 	dist/linux/build-k8s-extensions.sh
-	cp -r certificate-generation-scripts extended-scheduler custom-controller policy.json isecl-k8s-extensions.sh  out/k8s-extensions/
+	cp -r certificate-generation-scripts extended-scheduler custom-controller policy.json isecl-k8s-extensions.sh install.sh out/k8s-extensions/
 	makeself out/k8s-extensions out/isecl-k8s-extensions.bin "k8s extensions installer $(VERSION)" ./install.sh
 
 all: installer

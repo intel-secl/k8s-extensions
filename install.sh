@@ -47,7 +47,7 @@ chmod +x create_certs.sh
 
 if [ $? -ne 0 ]
 then
-  "Error while creating certificates."
+  echo "Error while creating certificates."
   isecl-k8s-extensions uninstall
   exit 1
 fi
