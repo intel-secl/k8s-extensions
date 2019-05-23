@@ -267,31 +267,29 @@ echo "done"
 # Create a K8S role that specifies the level of access:
 echo -n "Provisioning access in K8S..."
 clusterrolename=cr_${user}_`echo $verbs | tr -d ','`_`echo $resources | tr -d ',.'`
-#check_exec "kubectl create clusterrole $clusterrolename --verb=${verbs} --resource=${resources}" "$RESPONSE_MESSAGE_CREATECLUSTERROLE_FAIL : ${clusterrolename}" $RESPONSE_CREATECLUSTERROLE_FAIL
-kubectl create clusterrole $clusterrolename --verb=${verbs} --resource=${resources} -o json
+
+kubectl get clusterrole $clusterrolename
 if [ $? -ne 0 ]
 then
+  kubectl create clusterrole $clusterrolename --verb=${verbs} --resource=${resources} -o json
+  if [ $? -ne 0 ]
+  then
 	# we rollback the operation
-	echo -e "ClusterRole ${clusterrolename} already exists for the user ${user} for the resources ${resources} and operations ${verbs}.\nDelete existing role using the command \nkubectl delete clusterrole $clusterrolename\nand try again."
-	#kubectl delete clusterrole $clusterrolename
-	#echo "$RESPONSE_MESSAGE_CREATECLUSTERROLE_FAIL : ${clusterrolename}"
 	exit $RESPONSE_CREATECLUSTERROLE_FAIL
+  fi
 fi
 
-# Create a RoleBinding or a ClusterRoleBinding to assign the Role to the account:
-#check_exec "kubectl create clusterrolebinding crb_${clusterrolename} --clusterrole=${clusterrolename} --user=${user} -o json" "$RESPONSE_MESSAGE_CREATEROLEBINDING_FAIL : crb_${clusterrolename}" $RESPONSE_CREATEROLEBINDING_FAIL
-kubectl create clusterrolebinding crb_${clusterrolename} --clusterrole=${clusterrolename} --user=${user}
+kubectl get clusterrolebinding crb_${clusterrolename}
 if [ $? -ne 0 ]
 then
+  kubectl create clusterrolebinding crb_${clusterrolename} --clusterrole=${clusterrolename} --user=${user}
+  if [ $? -ne 0 ]
+  then
         # we rollback the operation
-        #echo "ROLLBACK: deleting clusterrolebinding crb_${clusterrolename}"
-        #kubectl delete clusterrolebinding crb_$clusterrolename
-	echo -e "ClusterRoleBinding crb_${clusterrolename} already exists for the user ${user} for the resources ${resources} and operations ${verbs}.\nDelete existing ClusterRoleBinding and associated ClusterRole using the command \nkubectl delete clusterrolebinding crb_$clusterrolename"
-	echo -e "\nkubectl delete clusterrole $clusterrolename\nand try again."
-
-        #echo "$RESPONSE_MESSAGE_CREATECLUSTERROLEBINDING_FAIL : crb_${clusterrolename}"
-        exit $RESPONSE_CREATECLUSTERROLEBINDING_FAIL
+        exit $RESPONSE_CREATECLUSTERROLE_FAIL
+  fi
 fi
+
 echo "Done"
 
 echo Client Certificate generated at `ls ${user}.crt`
