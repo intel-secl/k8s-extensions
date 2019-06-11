@@ -8,8 +8,8 @@ k8s_extenstions_uninstall(){
   rm -rf /opt/isecl-k8s-extensions
   rm -rf /root/attestation-hub-keystores
   rm /usr/local/bin/isecl-k8s-extensions
-  kubectl delete clusterrole cr_root_getlistdeletepatchdeletecollectioncreateupdate_geolocationcrdsiseclintelcomplatformcrdsiseclintelcom
-  kubectl delete clusterrolebinding crb_cr_root_getlistdeletepatchdeletecollectioncreateupdate_geolocationcrdsiseclintelcomplatformcrdsiseclintelcom
+  kubectl delete clusterrole cr_root_getlistdeletepatchdeletecollectioncreateupdate_hostattributescrdiseclintelcom
+  kubectl delete clusterrolebinding crb_cr_root_getlistdeletepatchdeletecollectioncreateupdate_hostattributescrdiseclintelcom
   systemctl daemon-reload
 }
 

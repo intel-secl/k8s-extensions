@@ -28,7 +28,7 @@ chmod +x create_k8s_certs.sh
             -c /etc/kubernetes/pki/ca.crt \
             -k /etc/kubernetes/pki/ca.key \
             -a /etc/kubernetes/pki/apiserver.crt \
-            -r "geolocationcrds.isecl.intel.com,platformcrds.isecl.intel.com" \
+            -r "hostattributes.crd.isecl.intel.com" \
             -v "get,list,delete,patch,deletecollection,create,update" \
             -d "/root/ahubkeystore" \
             -f "false" \
