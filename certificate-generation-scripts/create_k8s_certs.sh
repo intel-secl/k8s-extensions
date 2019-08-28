@@ -42,11 +42,11 @@
 # 4) Nova Plugin Tenant Configuration JSON template.
 
 #Example:
-#./create_k8s_certs.sh -u ahub_tenant_1 -s "10.105.168.157" -c /etc/kubernetes/pki/ca.crt -k /etc/kubernetes/pki/ca.key \
+#./create_k8s_certs.sh -u ahub_tenant_1 -s "192.168.172.1" -c /etc/kubernetes/pki/ca.crt -k /etc/kubernetes/pki/ca.key \
 # -a /etc/kubernetes/pki/apiserver.crt -r "geolocationcrds.isecl.intel.com,platformcrds.isecl.intel.com" \
 # -v "get,list,delete,patch,deletecollection,create,update" -d "/home/" -f "true" -i "attestation-hub" \
 # -p "/opt/attestation-hub/configuration" -e "true" -y "3" -t "default" -b "project:admin" -o "admin" \
-# -g "admin" -l "http://10.105.167.206:35357/v3"
+# -g "admin" -l "http://192.168.172.1:35357/v3"
 
 echo -e "Starting Kubernetes API Server Client Access Provision Workflow\n-------------------------------\n\n"
 
