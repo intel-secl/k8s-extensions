@@ -2,7 +2,7 @@
 DESCRIPTION="ISecL K8S Extensions"
 
 
-VERSION := 1.5
+VERSION := 1.6
 BUILD := `date +%FT%T%z`
 
 # LDFLAGS
