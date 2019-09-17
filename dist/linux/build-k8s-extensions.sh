@@ -11,19 +11,19 @@ mkdir $CUSTOM_CONTROLLER_DIR
 mkdir $EXTENDED_SCHEDULER_DIR
 
 cd $BUILD_WORKSPACE_DIR
-git clone ssh://git@gitlab.devtools.intel.com:29418/sst/isecl/lib/k8s_custom_cit_controllers-k8s_custom_controllers.git
-cd k8s_custom_cit_controllers-k8s_custom_controllers 
+git clone https://github.com/intel-secl/k8s-custom-controller.git
+cd k8s-custom-controller 
 git fetch
-git checkout v1.6/develop
+git checkout v1.6-beta
 make
 cp isecl-k8s-controller-1.0-SNAPSHOT isecl-k8s-controller.service Makefile $CUSTOM_CONTROLLER_DIR/
 
 
 cd $BUILD_WORKSPACE_DIR
-git clone ssh://git@gitlab.devtools.intel.com:29418/sst/isecl/lib/k8s_scheduler_cit_extension-k8s_extended_scheduler.git
-cd k8s_scheduler_cit_extension-k8s_extended_scheduler
+git clone https://github.com/intel-secl/k8s-extended-scheduler.git
+cd k8s-extended-scheduler
 git fetch
-git checkout v1.6/develop
+git checkout v1.6-beta
 make
 cp -r config/ isecl-k8s-scheduler-1.0-SNAPSHOT Makefile isecl-extended-scheduler-config.json isecl-k8s-scheduler.service $EXTENDED_SCHEDULER_DIR
 cd $CURR_DIR
