@@ -41,5 +41,6 @@ make
 
 ### Deploy
 ```console
+> export MASTER_IP=<k8s-master-ip>
 > ./isecl-k8s-extensions-*.bin
 ```
