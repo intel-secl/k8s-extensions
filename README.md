@@ -10,7 +10,7 @@
 ## Software requirements
 - git
 - makeself
-- Go 11.4 or newer
+- `go` version >= `go1.11.4` & <= `go1.12.12`
 
 # Step By Step Build Instructions
 
@@ -21,11 +21,11 @@
 sudo yum install -y git wget makeself
 ```
 
-### Install `go 1.11.4` or newer
-The `ISecL K8s Extenstions` requires Go version 11.4 that has support for `go modules`. The build was validated with version 11.4 version of `go`. It is recommended that you use a newer version of `go` - but please keep in mind that the product has been validated with 1.11.4 and newer versions of `go` may introduce compatibility issues. You can use the following to install `go`.
+### Install `go` version >= `go1.11.4` & <= `go1.12.12`
+The `ISecL K8s Extensions` requires Go version 1.11.4 that has support for `go modules`. The build was validated with the latest version 1.12.12 of `go`. It is recommended that you use 1.12.12 version of `go`. More recent versions may introduce compatibility issues. You can use the following to install `go`.
 ```shell
-wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
-tar -xzf go1.11.4.linux-amd64.tar.gz
+wget https://dl.google.com/go/go1.12.12.linux-amd64.tar.gz
+tar -xzf go1.12.12.linux-amd64.tar.gz
 sudo mv go /usr/local
 export GOROOT=/usr/local/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
