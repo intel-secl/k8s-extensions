@@ -1,8 +1,8 @@
 #!/bin/bash
 
 K8S_EXTENSION_DIR=/opt/isecl-k8s-extensions
-K8S_EXTENSION_CONFIG_DIR=$K8S_EXTENSION_DIR/config/
-HUB_KEYSTORE_DIR=/root/attestation-hub-keystores/
+K8S_EXTENDED_SCHEDULER_CONFIG_DIR=$K8S_EXTENSION_DIR/isecl-k8s-scheduler/config/
+HUB_KEYSTORE_DIR=$K8S_EXTENSION_DIR/attestation-hub-keystores/
 
 yum -y install java-1.8.0-openjdk openssl
 
@@ -30,7 +30,7 @@ chmod +x create_k8s_certs.sh
             -a /etc/kubernetes/pki/apiserver.crt \
             -r "hostattributes.crd.isecl.intel.com" \
             -v "get,list,delete,patch,deletecollection,create,update" \
-            -d "/root/ahubkeystore" \
+            -d "$HUB_KEYSTORE_DIR" \
             -f "false" \
             -e "false"
 
@@ -40,29 +40,12 @@ then
 fi
 
 mkdir $HUB_KEYSTORE_DIR			
-chmod +x create_k8s_extsched_cert.sh
-
-echo ./create_k8s_extsched_cert.sh -n "K8S Extended Scheduler" \ -s $MASTER_IP,$HOSTNAME \ -c /etc/kubernetes/pki/ca.crt -k /etc/kubernetes/pki/ca.key
-
-./create_k8s_extsched_cert.sh -s $MASTER_IP,$HOSTNAME \
-        -c /etc/kubernetes/pki/ca.crt \
-        -k /etc/kubernetes/pki/ca.key
-
-if [ $? -ne 0 ]
-then
-  exit 1
-fi
-
-chmod +755 $K8S_EXTENSION_CONFIG_DIR
-cp server.crt $K8S_EXTENSION_CONFIG_DIR
-cp server.key $K8S_EXTENSION_CONFIG_DIR
 
 
-rm create_k8s_extsched_cert.sh
 rm create_k8s_certs.sh
 rm create_certs.sh
-rm server.crt
-rm server.key
 
-cp ./* $HUB_KEYSTORE_DIR -r
+cp root_k8s_client.p12 $HUB_KEYSTORE_DIR/
+cp root_k8s_trust.p12 $HUB_KEYSTORE_DIR/
+cp root_keystore.properties $HUB_KEYSTORE_DIR/
 
