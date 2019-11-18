@@ -9,9 +9,9 @@ import (
 	"flag"
 	"fmt"
 	"k8s_custom_cit_controllers-k8s_custom_controllers/crdController"
+	"k8s_custom_cit_controllers-k8s_custom_controllers/util"
 	"sync"
 
-	"github.com/golang/glog"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -23,19 +23,22 @@ func GetClientConfig(kubeconfig string) (*rest.Config, error) {
 	return clientcmd.BuildConfigFromFlags("", kubeconfig)
 }
 
+var Log = util.GetLogger()
 const TrustedPrefixConf = "/opt/isecl-k8s-extensions/config/tag_prefix.conf"
 
 func main() {
 
-	glog.V(4).Infof("Starting ISecL Custom Controller")
+	Log.Infof("Starting ISecL Custom Controller")
 
 	var Usage = func() {
-		fmt.Println("Usage: ./isecl-k8s-controller-1.0-SNAPSHOT -kubeconf=<file path>")
+		fmt.Println("Usage: ./isecl-k8s-controller -loglevel=<loglevel> -kubeconf=<file path>")
 	}
 
 	kubeConf := flag.String("kubeconf", "", "Path to a kube config. ")
+	logLevel := flag.String("loglevel", "", "loglevel")
 	flag.Parse()
 
+	util.SetLogger(*logLevel)
 	if *kubeConf == "" {
 		Usage()
 		return
@@ -43,13 +46,13 @@ func main() {
 
 	config, err := GetClientConfig(*kubeConf)
 	if err != nil {
-		glog.Errorf("Error in config %v", err)
+		Log.Errorf("Error in config %v", err)
 		return
 	}
 
 	cs, err := apiextcs.NewForConfig(config)
 	if err != nil {
-		glog.Errorf("Error in config %v", err)
+		Log.Errorf("Error in config %v", err)
 		return
 	}
 
@@ -61,7 +64,7 @@ func main() {
 	//crdController.NewIseclCustomResourceDefinition to create CRD
 	err = crdController.NewIseclCustomResourceDefinition(cs, &CrdDef)
 	if err != nil {
-		glog.Errorf("Error in creating platform CRD %v", err)
+		Log.Errorf("Error in creating platform CRD %v", err)
 		return
 	}
 
@@ -75,7 +78,7 @@ func main() {
 	defer close(stop)
 	go controller.Run(1, stop)
 
-	glog.V(4).Infof("Waiting for updates on  ISecl Custom Resource Definitions")
+	Log.Infof("Waiting for updates on  ISecl Custom Resource Definitions")
 
 	// Wait forever
 	select {}

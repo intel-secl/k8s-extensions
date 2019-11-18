@@ -11,14 +11,12 @@ import (
 	"fmt"
 	"k8s_custom_cit_controllers-k8s_custom_controllers/crdLabelAnnotate"
 	ha_schema "k8s_custom_cit_controllers-k8s_custom_controllers/crdSchema/iseclHostAttributesSchema"
-	"log"
 	"os"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sclient "k8s.io/client-go/kubernetes"
@@ -83,7 +81,7 @@ func (c *IseclHAController) processNextItem() bool {
 
 //processPLQueue : can be extended to validate the crd objects are been acted upon
 func (c *IseclHAController) processPLQueue(key string) error {
-	glog.Infof("processPLQueue for Key %#v ", key)
+	Log.Infof("processPLQueue for Key %#v ", key)
 	return nil
 }
 
@@ -93,17 +91,17 @@ func (c *IseclHAController) processPLQueue(key string) error {
 func (c *IseclHAController) syncFromQueue(key string) error {
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		Log.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
 	if !exists {
 		// Below we will warm up our cache with a CDR, so that we will see a delete for one CRD
-		glog.Infof("PL CRD object %s does not exist anymore\n", key)
+		Log.Infof("PL CRD object %s does not exist anymore\n", key)
 	} else {
 		// Note that you also have to check the uid if you have a local controlled resource, which
 		// is dependent on the actual instance, to detect that a CRD object was recreated with the same name
-		glog.Infof("Sync/Add/Update for PL CRD Object %#v ", obj)
+		Log.Infof("Sync/Add/Update for PL CRD Object %#v ", obj)
 		c.processPLQueue(key)
 	}
 	return nil
@@ -121,7 +119,7 @@ func (c *IseclHAController) handleErr(err error, key interface{}) {
 
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	if c.queue.NumRequeues(key) < 5 {
-		glog.Infof("Error syncing CRD %v: %v", key, err)
+		Log.Infof("Error syncing CRD %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
@@ -132,7 +130,7 @@ func (c *IseclHAController) handleErr(err error, key interface{}) {
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	glog.Infof("Dropping CRD %q out of the queue: %v", key, err)
+	Log.Infof("Dropping CRD %q out of the queue: %v", key, err)
 }
 
 func (c *IseclHAController) Run(threadiness int, stopCh chan struct{}) {
@@ -140,7 +138,7 @@ func (c *IseclHAController) Run(threadiness int, stopCh chan struct{}) {
 
 	// Let the workers stop when we are done
 	defer c.queue.ShutDown()
-	glog.Info("Starting Platformcrd controller")
+	Log.Info("Starting Platformcrd controller")
 
 	go c.informer.Run(stopCh)
 
@@ -155,7 +153,7 @@ func (c *IseclHAController) Run(threadiness int, stopCh chan struct{}) {
 	}
 
 	<-stopCh
-	glog.Info("Stopping Platform controller")
+	Log.Info("Stopping Platform controller")
 }
 
 func (c *IseclHAController) runWorker() {
@@ -193,15 +191,15 @@ func GetHaObjLabel(obj ha_schema.Host, node *api.Node, trustedPrefixConf string)
 		if key == trustLabelWithPrefix {
 			trustPresent = true
 			if value == obj.Trusted {
-				glog.Info("No change in Trustlabel, updating Trustexpiry time only")
+				Log.Info("No change in Trustlabel, updating Trustexpiry time only")
 			} else {
-				glog.Info("Updating Complete Trustlabel for the node")
+				Log.Info("Updating Complete Trustlabel for the node")
 				lbl[trustLabelWithPrefix] = obj.Trusted
 			}
 		}
 	}
 	if !trustPresent {
-		glog.Info("Trust value was not present on node adding for first time")
+		Log.Info("Trust value was not present on node adding for first time")
 		lbl[trustLabelWithPrefix] = obj.Trusted
 	}
 	expiry := strings.Replace(obj.Expiry, ":", ".", -1)
@@ -214,7 +212,7 @@ func GetHaObjLabel(obj ha_schema.Host, node *api.Node, trustedPrefixConf string)
 func getPrefixFromConf(path string) (string, error) {
         out, err := os.Open(path)
         if err != nil {
-                glog.Errorf("Error: %s %v", path, err)
+                Log.Errorf("Error: %s %v", path, err)
                 return "", err
         }
 
@@ -227,7 +225,7 @@ func getPrefixFromConf(path string) (string, error) {
         s := Config{}
         err = json.Unmarshal(readBytes[:n], &s)
         if err != nil {
-                glog.Errorf("Error:  %v", err)
+                Log.Errorf("Error:  %v", err)
                 return "", err
         }
         return s.Trusted, nil
@@ -239,19 +237,19 @@ func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabel
 		nodeName := haobj.Spec.HostList[index].Hostname
 		node, err := helper.GetNode(cli, nodeName)
 		if err != nil {
-			glog.Info("Failed to get node within cluster: %s", err.Error())
+			Log.Info("Failed to get node within cluster: %s", err.Error())
 			continue
 		}
 		lbl, ann, err := GetHaObjLabel(ele, node, trustedPrefixConf)
 		if err != nil {
-			log.Fatalf("Error: %v", err)
+			Log.Fatalf("Error: %v", err)
 		}
 		mutex.Lock()
 		helper.AddLabelsAnnotations(node, lbl, ann)
 		err = helper.UpdateNode(cli, node)
 		mutex.Unlock()
 		if err != nil {
-			glog.Info("can't update node: %s", err.Error())
+			Log.Info("can't update node: %s", err.Error())
 		}
 	}
 }
@@ -261,7 +259,7 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 	// Create a new clientset which include our CRD schema
 	crdcs, scheme, err := ha_schema.NewHAClient(config)
 	if err != nil {
-		log.Fatalf("Failed to create new clientset for Platform CRD %v", err)
+		Log.Fatalf("Failed to create new clientset for Platform CRD %v", err)
 	}
 
 	// Create a CRD client interface
@@ -273,7 +271,7 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 	return cache.NewIndexerInformer(hacrdclient.NewHAListWatch(), &ha_schema.HostAttributesCrd{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
-			glog.Info("Received Add event for ", key)
+			Log.Info("Received Add event for ", key)
 			haobj := obj.(*ha_schema.HostAttributesCrd)
 			if err == nil {
 				queue.Add(key)
@@ -282,7 +280,7 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
-			glog.Info("Received Update event for ", key)
+			Log.Info("Received Update event for ", key)
 			haobj := new.(*ha_schema.HostAttributesCrd)
 			if err == nil {
 				queue.Add(key)
@@ -293,7 +291,7 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 			// IndexerInformer uses a delta queue, therefore for deletes we have to use this
 			// key function.
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-			glog.Info("Received delete event for ", key)
+			Log.Info("Received delete event for ", key)
 			if err == nil {
 				queue.Add(key)
 			}

@@ -8,7 +8,6 @@ package algorithm
 import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"k8s.io/api/core/v1"
-	"github.com/golang/glog"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,12 +30,12 @@ func keyExists(decoded map[string]interface{}, key string) bool {
 func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string) bool {
 
 	if !keyExists(claims, ahreport){
-		glog.Errorf("ValidatePodWithAnnotation - Asset Tags not found for node.")
+		Log.Errorf("ValidatePodWithAnnotation - Asset Tags not found for node.")
 		return false
 	}
 
 	assetClaims := claims[ahreport].(map[string]interface{})
-        glog.Infoln("ValidatePodWithAnnotation - Validating node %v claims %v", nodeData, assetClaims)
+        Log.Infoln("ValidatePodWithAnnotation - Validating node %v claims %v", nodeData, assetClaims)
 
 
 	for _, val := range nodeData {
@@ -51,14 +50,14 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 						if nodeVal == sigVal {
 							continue
 						} else {
-							glog.Infoln("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+							Log.Infoln("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
 							return false
 						}
 					} else {
 						if nodeVal == sigVal {
 							continue
 						} else {
-							 glog.Infoln("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+							 Log.Infoln("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
 							return false
 						}
 					}
@@ -77,7 +76,7 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 						if match == newVal {
 							flag = true
 						}else{
-							glog.Infoln("ValidatePodWithAnnotation - Geo Asset Tags - Mismatch in %v field. Actual: %v | In Signature: %v ", geoKey, match, newVal)
+							Log.Infoln("ValidatePodWithAnnotation - Geo Asset Tags - Mismatch in %v field. Actual: %v | In Signature: %v ", geoKey, match, newVal)
 						}
 					}
 					if flag {
@@ -98,25 +97,25 @@ func ValidateNodeByTime(claims jwt.MapClaims) int {
 	trustedTimeFlag := 0
 	if timeVal, ok := claims["valid_to"].(string); ok {
 		reg, err := regexp.Compile("[0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+")
-		glog.Infoln("ValidateNodeByTime reg %v err %v",reg,err)
+		Log.Infoln("ValidateNodeByTime reg %v err %v",reg,err)
 		if err != nil {
-			glog.Errorf("Error parsing valid_to time: %v",err)
+			Log.Errorf("Error parsing valid_to time: %v",err)
 			return trustedTimeFlag
 		}
 		newstr := reg.ReplaceAllString(timeVal, "")
-		glog.Infoln("ValidateNodeByTime newstr %v ",newstr)
+		Log.Infoln("ValidateNodeByTime newstr %v ",newstr)
 		trustedValidToTime := strings.Replace(timeVal, newstr, "", -1)
-		glog.Infoln("ValidateNodeByTime trustedValidToTime %v ",trustedValidToTime)
+		Log.Infoln("ValidateNodeByTime trustedValidToTime %v ",trustedValidToTime)
 
 		t := time.Now().UTC()
 		timeDiff := strings.Compare(trustedValidToTime, t.Format(time.RFC3339))
-		glog.Infoln("ValidateNodeByTime - ValidTo - %s |  current - %s | Diff - %s", trustedValidToTime, timeVal, timeDiff)
+		Log.Infoln("ValidateNodeByTime - ValidTo - %s |  current - %s | Diff - %s", trustedValidToTime, timeVal, timeDiff)
 		if timeDiff >= 0 {
-			glog.Infoln("ValidateNodeByTime -timeDiff ", timeDiff)
+			Log.Infoln("ValidateNodeByTime -timeDiff ", timeDiff)
 			trustedTimeFlag = 1
-			glog.Infoln("ValidateNodeByTime -trustedTimeFlag ", trustedTimeFlag)
+			Log.Infoln("ValidateNodeByTime -trustedTimeFlag ", trustedTimeFlag)
 		}else{
-			glog.Infof("ValidateNodeByTime - Node outside expiry time - ValidTo - %s |  current - %s", timeVal, t)
+			Log.Infof("ValidateNodeByTime - Node outside expiry time - ValidTo - %s |  current - %s", timeVal, t)
 		}
 
 	}

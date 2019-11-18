@@ -6,16 +6,49 @@ SPDX-License-Identifier: BSD-3-Clause
 package util
 
 import (
-	"log"
 	"strconv"
-
+	"os"
+	"strings"
 	"github.com/tkanos/gonfig"
+	"github.com/sirupsen/logrus"
 )
 
 var AH_KEY_FILE string
+const LogFile = "/var/log/isecl-k8s-extensions/isecl-k8s-scheduler.log"
+const SchedConf = "/opt/isecl-k8s-extensions/isecl-k8s-scheduler/config/isecl-extended-scheduler-config.json"
+
+var Log *logrus.Logger
+func GetLogger() *logrus.Logger{
+	Log = logrus.New()
+        logFile, err := os.OpenFile(LogFile, os.O_WRONLY | os.O_CREATE | os.O_APPEND, 0755)
+        if err != nil {
+                Log.Fatal(err)
+        }
+        Log.Formatter = &logrus.JSONFormatter{}
+        Log.SetOutput(logFile)
+	Log.Info("Initialized log")
+	return Log
+}
+
+func SetLogger(logLevel string){
+	logLevel = strings.ToUpper(logLevel)
+	switch logLevel{
+		case "DEBUG":
+			Log.SetLevel(logrus.DebugLevel)
+		case "INFO":
+			Log.SetLevel(logrus.InfoLevel)
+		case "WARNING":
+			Log.SetLevel(logrus.WarnLevel)
+		case "ERROR":
+			Log.SetLevel(logrus.ErrorLevel)
+		default:
+			Log.SetLevel(logrus.InfoLevel)	
+	}
+}
+
+
 
 func GetCmdlineArgs() (string, string, string, string) {
-
 	type extenedSchedConfig struct {
 		Url  string //Extended scheduler url
 		Port int    //Port for the Extended scheduler to listen on
@@ -28,10 +61,9 @@ func GetCmdlineArgs() (string, string, string, string) {
 	}
 
 	conf := extenedSchedConfig{}
-	schedConf := "/opt/isecl-k8s-extensions/isecl-k8s-scheduler/config/isecl-extended-scheduler-config.json"
-	err := gonfig.GetConf(schedConf, &conf)
+	err := gonfig.GetConf(SchedConf, &conf)
 	if err != nil {
-		log.Fatalf("Error: Please ensure extended schduler configuration is present in curent dir,%v", err)
+		Log.Fatalf("Error: Please ensure extended schduler configuration is present in curent dir,%v", err)
 	}
 
 	//PORT for the extended scheduler to listen.

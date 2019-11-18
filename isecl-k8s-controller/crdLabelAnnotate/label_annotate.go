@@ -6,13 +6,15 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdLabelAnnotate
 
 import (
-	"github.com/golang/glog"
+	"k8s_custom_cit_controllers-k8s_custom_controllers/util"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "k8s.io/client-go/kubernetes"
 	api "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 )
 
+var Log = util.GetLogger()
 type APIHelpers interface {
 
 	// GetNode returns the Kubernetes node on which this container is running.
@@ -38,7 +40,7 @@ func Getk8sClientHelper(config *rest.Config) (APIHelpers, *k8sclient.Clientset) 
 
 	cli, err := k8sclient.NewForConfig(config)
 	if err != nil {
-		glog.Errorf("Error while creating k8s client %v", err)
+		Log.Errorf("Error while creating k8s client %v", err)
 	}
 	return helper, cli
 }
@@ -48,7 +50,7 @@ func (h K8sHelpers) GetNode(cli *k8sclient.Clientset, NodeName string) (*api.Nod
 	// Get the node object using the node name
 	node, err := cli.Core().Nodes().Get(NodeName, metav1.GetOptions{})
 	if err != nil {
-		glog.Errorf("Can't get node: %s", err.Error())
+		Log.Errorf("Can't get node: %s", err.Error())
 		return nil, err
 	}
 
@@ -70,7 +72,7 @@ func (h K8sHelpers) UpdateNode(c *k8sclient.Clientset, n *api.Node) error {
 	// Send the updated node to the apiserver.
 	_, err := c.Core().Nodes().Update(n)
 	if err != nil {
-		glog.Errorf("Error while updating node label:", err.Error())
+		Log.Errorf("Error while updating node label:", err.Error())
 		return err
 	}
 	return nil

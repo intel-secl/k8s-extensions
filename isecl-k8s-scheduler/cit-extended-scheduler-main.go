@@ -9,16 +9,16 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"flag"
 	"k8s_scheduler_cit_extension-k8s_extended_scheduler/api"
 	"k8s_scheduler_cit_extension-k8s_extended_scheduler/util"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
-
+	
+	
 	"github.com/gin-gonic/gin"
-	"github.com/golang/glog"
 )
 
 type Config struct {
@@ -26,17 +26,17 @@ type Config struct {
 }
 
 const TrustedPrefixConf = "/opt/isecl-k8s-extensions/config/"
-
+var Log = util.GetLogger()
 func getPrefixFromConf(path string) (string, error) {
 	out, err := ioutil.ReadFile(path)
 	if err != nil {
-		glog.Errorf("Error: %s %v", path, err)
+		Log.Errorf("Error: %s %v", path, err)
 		return "", err
 	}
 	s := Config{}
 	err = json.Unmarshal(out, &s)
 	if err != nil {
-		glog.Errorf("Error:  %v", err)
+		Log.Errorf("Error:  %v", err)
 		return "", err
 	}
 	return s.Trusted, nil
@@ -63,7 +63,7 @@ func SetupRouter() (*gin.Engine, *http.Server) {
 	go func() {
 		// service connections
 		if err := server.ListenAndServeTLS(server_crt, server_key); err != nil {
-			glog.Errorf("listen: %s\n", err)
+			Log.Errorf("listen: %s\n", err)
 		}
 	}()
 
@@ -73,13 +73,16 @@ func SetupRouter() (*gin.Engine, *http.Server) {
 }
 
 func main() {
-	glog.V(4).Infof("Starting ISecL Extended Scheduler...")
-
+	Log.Info("Starting ISecL Extended Scheduler...")
 	var err error
 
+	logLevel := flag.String("loglevel", "debug", "Path to a kube config. ")
+        flag.Parse()
+	util.SetLogger(*logLevel)
 	api.Confpath, err = getPrefixFromConf(TrustedPrefixConf + "tag_prefix.conf")
+	
 	if err != nil {
-		log.Fatalf("Error:in trustedprefixconf %v", err)
+		Log.Fatalf("Error:in trustedprefixconf %v", err)
 	}
 
 	router, server := SetupRouter()
@@ -92,12 +95,12 @@ func main() {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	glog.Infof("Shutting down ISecL Extended Scheduler Server ...")
+	Log.Infof("Shutting down ISecL Extended Scheduler Server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		glog.Infof(" ISecL Extended Scheduler Server Shutdown:", err)
+		Log.Infof(" ISecL Extended Scheduler Server Shutdown:", err)
 	}
-	glog.Infof(" ISecL Extended Scheduler Server exit")
+	Log.Infof(" ISecL Extended Scheduler Server exit")
 }

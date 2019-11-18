@@ -11,7 +11,8 @@ VERSION := $(or ${GITTAG}, v0.0.0)
 
 
 # Install the binary
-installer: 
+installer:
+	chmod +x build-k8s-extensions.sh
 	./build-k8s-extensions.sh	 
 	mkdir -p out/k8s-extensions
 	cp -r certificate-generation-scripts/* out/k8s-extensions/

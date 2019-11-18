@@ -7,14 +7,16 @@ package crdController
 
 import (
 	"time"
+	"k8s_custom_cit_controllers-k8s_custom_controllers/util"
 
-	"github.com/golang/glog"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	clientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
+
+var Log = util.GetLogger()
 
 const (
 	trustexpiry     = "TrustTagExpiry"
@@ -46,16 +48,16 @@ func NewIseclCustomResourceDefinition(cs clientset.Interface, crdDef *CrdDefinit
 	}
 	_, err := cs.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
 	if err != nil && apierrors.IsAlreadyExists(err) {
-		glog.Infof("ISECL HostAttributes CRD object allready exisists")
+		Log.Infof("ISECL HostAttributes CRD object allready exisists")
 		return nil
 	} else {
 		if err := waitForEstablishedCRD(cs, crd.Name); err != nil {
-			glog.Errorf("Failed to establish CRD %v", err)
+			Log.Errorf("Failed to establish CRD %v", err)
 			return err
 		}
 	}
 
-	glog.Infof("Sucessfully created CRD : %#v \n", crd.Name)
+	Log.Infof("Sucessfully created CRD : %#v \n", crd.Name)
 	return err
 }
 
@@ -74,7 +76,7 @@ func waitForEstablishedCRD(client clientset.Interface, name string) error {
 				}
 			case apiextensionsv1beta1.NamesAccepted:
 				if cond.Status == apiextensionsv1beta1.ConditionFalse {
-					glog.Infof("Name conflict: %v\n", cond.Reason)
+					Log.Infof("Name conflict: %v\n", cond.Reason)
 				}
 			}
 		}

@@ -18,7 +18,6 @@ import (
 	"strings"
 	"k8s_scheduler_cit_extension-k8s_extended_scheduler/util"
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/golang/glog"
 	"k8s.io/api/core/v1"
 )
 
@@ -32,7 +31,7 @@ type JwtHeader struct {
 func ParseRSAPublicKeyFromPEM(pubKey []byte) (*rsa.PublicKey, error) {
 	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(pubKey)
 	if err != nil {
-		glog.Errorf("error in ParseRSAPublicKeyFromPEM")
+		Log.Errorf("error in ParseRSAPublicKeyFromPEM")
 		return nil,err
 	}
 	return verifyKey, err
@@ -49,13 +48,13 @@ func ValidateAnnotationByPublicKey(cipherText string, key *rsa.PublicKey) error 
 	var jwtHeader JwtHeader
 	err := json.Unmarshal(jwtHeaderRcvd, &jwtHeader)
 	if err != nil {
-		glog.Errorf("%+v", err)
+		Log.Errorf("%+v", err)
 		return errors.New("Failed to unmarshal jwt header")
 	}
 	pubKey := util.GetAHPublicKey()
 	block, _ := pem.Decode(pubKey)
 	if block == nil || block.Type != "PUBLIC KEY" {
-		glog.Fatal("failed to decode PEM block containing public key")
+		Log.Fatal("failed to decode PEM block containing public key")
 	}
 	keyIdBytes := sha1.Sum(block.Bytes)
 	keyIdStr := base64.StdEncoding.EncodeToString(keyIdBytes[:])
@@ -66,13 +65,13 @@ func ValidateAnnotationByPublicKey(cipherText string, key *rsa.PublicKey) error 
 
 	signedContent, err := base64.StdEncoding.DecodeString(parts[1])
 	if err != nil {
-		glog.Errorf("Error while base64 decoding of trust report content %+v", err)
+		Log.Errorf("Error while base64 decoding of trust report content %+v", err)
                 return err
         }
 
 	signatureString, _ := base64.StdEncoding.DecodeString(parts[2])
 	if err != nil {
-		glog.Errorf("Error while base64 decoding of signature %+v", err)
+		Log.Errorf("Error while base64 decoding of signature %+v", err)
 		return err
 	}
 
@@ -86,9 +85,9 @@ func JWTParseWithClaims(cipherText string, verifyKey *rsa.PublicKey, claim jwt.M
 	token, err := jwt.ParseWithClaims(cipherText, claim, func(token *jwt.Token) (interface{}, error) {
 		return verifyKey, nil
 	})
-	glog.Infof("Parsed token is :", token)
+	Log.Infof("Parsed token is :", token)
 	if err != nil {
-		glog.Errorf("error in JWTParseWithClaims")
+		Log.Errorf("error in JWTParseWithClaims")
 	}
 }
 
@@ -98,38 +97,38 @@ func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement,
 	pubKey := util.GetAHPublicKey()
 	verifyKey, err := ParseRSAPublicKeyFromPEM(pubKey)
 	if err != nil {
-		glog.Errorf("Invalid AH public key")
+		Log.Errorf("Invalid AH public key")
 		return false
 	}
 	validationStatus := ValidateAnnotationByPublicKey(cipherText, verifyKey)
 	if validationStatus == nil {
-		glog.Infof("Signature is valid, trust report is from valid Attestation Hub")
+		Log.Infof("Signature is valid, trust report is from valid Attestation Hub")
 	} else {
-		glog.Errorf("%v", validationStatus)
-		glog.Errorf("Signature validation failed")
+		Log.Errorf("%v", validationStatus)
+		Log.Errorf("Signature validation failed")
 		return false
 	}
 
 	//cipherText is the annotation applied to the node, claims is the parsed AH report assigned as the annotation
 	JWTParseWithClaims(cipherText, verifyKey, claims)
 
-	glog.Infof("CheckAnnotationAttrib - Parsed claims for %v",  claims)
+	Log.Infof("CheckAnnotationAttrib - Parsed claims for %v",  claims)
 
 	verify := ValidatePodWithAnnotation(node, claims, trustPrefix)
 	if verify {
-		glog.Infoln("Node label validated against node annotations succesful")
+		Log.Infoln("Node label validated against node annotations succesful")
 	} else {
-		glog.Infoln("Node Label did not match node annotation ")
+		Log.Infoln("Node Label did not match node annotation ")
 		return false
 	}
 
 	trustTimeFlag := ValidateNodeByTime(claims)
 
 	if trustTimeFlag == 1 {
-		glog.Infoln("Attested node validity time check passed")
+		Log.Infoln("Attested node validity time check passed")
 		return true
 	} else {
-		glog.Infoln("Attested node validity time has expired")
+		Log.Infoln("Attested node validity time has expired")
 		return false
 	}
 }

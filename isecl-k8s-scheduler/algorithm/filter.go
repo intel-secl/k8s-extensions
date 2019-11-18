@@ -7,10 +7,13 @@ package algorithm
 
 import (
 	"fmt"
-	"github.com/golang/glog"
+	"k8s_scheduler_cit_extension-k8s_extended_scheduler/util"
+
 	"k8s.io/api/core/v1"
 	schedulerapi "k8s.io/kubernetes/plugin/pkg/scheduler/api"
 )
+
+var Log = util.GetLogger()
 
 //FilteredHost is used for getting the nodes and pod details and verify and return if pod key matches with annotations
 func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedulerapi.ExtenderFilterResult, error) {
@@ -33,7 +36,7 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 				if cipherVal, ok := node.Annotations["TrustTagSignedReport"]; ok {
 					for _, nodeSelector := range nodeSelectorData {
 						//match the data from the pod node selector tag to the node annotation
-						glog.Infof("Checking annotation for node %s",node)
+						Log.Infof("Checking annotation for node %s",node)
 						if CheckAnnotationAttrib(cipherVal, nodeSelector.MatchExpressions, confTrustPrefix) {
 							result = append(result, node)
 						} else {
@@ -53,7 +56,7 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 		}
 	}
 
-	glog.Infof("Returning following nodelist from extended scheduler: %v", result)
+	Log.Infof("Returning following nodelist from extended scheduler: %v", result)
 	if len(result) != 0 {
 		return &schedulerapi.ExtenderFilterResult{
 			Nodes:       &v1.NodeList{Items: result},
