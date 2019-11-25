@@ -4,10 +4,12 @@ K8S_EXTENSIONS_DIR=/opt/isecl-k8s-extensions
 CERTS=certificate-generation-scripts
 ATTESTATION_HUB_KEYSTORES=/opt/isecl-k8s-extensions/attestation-hub-keystores
 K8S_EXTENSIONS_CONFIG_DIR=$K8S_EXTENSIONS_DIR/config
+K8S_EXTENSIONS_LOG_DIR=/var/log/isecl-k8s-extensions
 TAG_PREFIX_CONF=tag_prefix.conf
 
 mkdir -p $K8S_EXTENSIONS_DIR
 mkdir -p $K8S_EXTENSIONS_CONFIG_DIR
+mkdir -p $K8S_EXTENSIONS_LOG_DIR
 cp isecl-k8s-extensions.sh $K8S_EXTENSIONS_DIR/ && chmod +x $K8S_EXTENSIONS_DIR/isecl-k8s-extensions.sh
 ln -s $K8S_EXTENSIONS_DIR/isecl-k8s-extensions.sh /usr/local/bin/isecl-k8s-extensions
 
