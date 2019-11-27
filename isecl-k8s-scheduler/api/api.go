@@ -26,6 +26,7 @@ func FilterHandler(c *gin.Context) {
 		if err == nil {
 			c.JSON(200, result)
 		} else {
+			Log.Errorf("Error serving request %+v", err)
 			c.JSON(500, err)
 		}
 	}

@@ -26,7 +26,7 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 	confTrustPrefix := trustPrefix
 	//Check for presence of Affinity tag in pod specification
 	if pod.Spec.Affinity != nil && pod.Spec.Affinity.NodeAffinity != nil {
-		if pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil && pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms != nil {
+		if pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil && len(pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) == 0 {
 
 			//get the nodeselector data
 			nodeSelectorData := pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
