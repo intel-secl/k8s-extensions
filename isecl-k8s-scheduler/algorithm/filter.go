@@ -8,7 +8,6 @@ package algorithm
 import (
 	"fmt"
 	"k8s_scheduler_cit_extension-k8s_extended_scheduler/util"
-
 	"k8s.io/api/core/v1"
 	schedulerapi "k8s.io/kubernetes/plugin/pkg/scheduler/api"
 )
@@ -26,11 +25,9 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 	confTrustPrefix := trustPrefix
 	//Check for presence of Affinity tag in pod specification
 	if pod.Spec.Affinity != nil && pod.Spec.Affinity.NodeAffinity != nil {
-		if pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil && len(pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) == 0 {
-
+		if pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil && len(pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions) !=0 {
 			//get the nodeselector data
 			nodeSelectorData := pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
-
 			for _, node := range nodes.Items {
 				//always check for the trust tag signed report
 				if cipherVal, ok := node.Annotations["TrustTagSignedReport"]; ok {
@@ -43,7 +40,7 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 							failedNodesMap[node.Name] = fmt.Sprintf("Annotation validation failed in extended-scheduler")
 						}
 					}
-				}
+				} 
 			}
 		} else {
 			for _, node := range nodes.Items {
