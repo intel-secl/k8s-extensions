@@ -177,15 +177,16 @@ func GetHaObjLabel(obj ha_schema.Host, node *api.Node, trustedPrefixConf string)
 	if !StringReg.MatchString(trustLabelWithPrefix) {
 		return nil, nil, errors.New("Invalid string formatted input")
 	}
+	
+	for key, val := range obj.Assettag {
+                labelkey := strings.Replace(key, " ", ".", -1)
+                labelkey = strings.Replace(labelkey, ":", ".", -1)
+                labelkey = trustLabelWithPrefix + labelkey
+                lbl[labelkey] = val
+        }
+
 
 	trustLabelWithPrefix = trustLabelWithPrefix + trustlabel
-
-	for key, val := range obj.Assettag {
-		labelkey := strings.Replace(key, " ", ".", -1)
-		labelkey = strings.Replace(labelkey, ":", ".", -1)
-		labelkey = trustLabelWithPrefix + labelkey
-		lbl[labelkey] = val
-	}
 
 	//Comparing with existing node labels
 	for key, value := range node.Labels {
@@ -234,8 +235,7 @@ func getPrefixFromConf(path string) (string, error) {
 
 //AddHostAttributesTabObj Handler for addition event of the HA CRD
 func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabelAnnotate.APIHelpers, cli *k8sclient.Clientset, mutex *sync.Mutex, trustedPrefixConf string) {
-	trustLabelWithPrefix, err := getPrefixFromConf(trustedPrefixConf)
-	Log.Errorf("Could not get the trustlabel prefix %v", err)
+	trustLabelWithPrefix, _ := getPrefixFromConf(trustedPrefixConf)
 
 	for index, ele := range haobj.Spec.HostList {
 		nodeName := haobj.Spec.HostList[index].Hostname

@@ -59,22 +59,21 @@ func (h K8sHelpers) GetNode(cli *k8sclient.Clientset, NodeName string) (*api.Nod
 }
 
 
-func cleanupLabelsWithIsecl(n *api.Node, prefix string) Labels{
-	var newNodeLabels Labels
+func cleanupLabelsWithIsecl(n *api.Node, labelPrefix string) Labels{
+	var newNodeLabels = make(Labels, len(n.Labels))
 	for k, v := range n.Labels{
-		if strings.HasPrefix(k, prefix) {
+		if strings.HasPrefix(k, labelPrefix) {
 			continue
 		}
 		newNodeLabels[k] = v
 	}
-
 	return newNodeLabels
 }
 
 //AddLabelsAnnotations applies labels and annotations to the node
-func (h K8sHelpers) AddLabelsAnnotations(n *api.Node, labels Labels, annotations Annotations, prefixLabel string) {
+func (h K8sHelpers) AddLabelsAnnotations(n *api.Node, labels Labels, annotations Annotations, labelPrefix string) {
 	//Clean up labels with isecl prefix.
-	newNodeLabels := cleanupLabelsWithIsecl(n, prefixLabel)
+	newNodeLabels := cleanupLabelsWithIsecl(n, labelPrefix)
 	for k, v := range labels {
 		newNodeLabels[k] = v
 	}
@@ -82,7 +81,6 @@ func (h K8sHelpers) AddLabelsAnnotations(n *api.Node, labels Labels, annotations
 		n.Annotations[k] = v
 	}
 	n.Labels = newNodeLabels
-	Log.Info("============update=============")
 	Log.Info(newNodeLabels)
 }
 
