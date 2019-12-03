@@ -183,6 +183,7 @@ func GetHaObjLabel(obj ha_schema.Host, node *api.Node, trustedPrefixConf string)
 	for key, val := range obj.Assettag {
 		labelkey := strings.Replace(key, " ", ".", -1)
 		labelkey = strings.Replace(labelkey, ":", ".", -1)
+		labelkey = trustLabelWithPrefix + labelkey
 		lbl[labelkey] = val
 	}
 
@@ -233,6 +234,9 @@ func getPrefixFromConf(path string) (string, error) {
 
 //AddHostAttributesTabObj Handler for addition event of the HA CRD
 func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabelAnnotate.APIHelpers, cli *k8sclient.Clientset, mutex *sync.Mutex, trustedPrefixConf string) {
+	trustLabelWithPrefix, err := getPrefixFromConf(trustedPrefixConf)
+	Log.Errorf("Could not get the trustlabel prefix %v", err)
+
 	for index, ele := range haobj.Spec.HostList {
 		nodeName := haobj.Spec.HostList[index].Hostname
 		node, err := helper.GetNode(cli, nodeName)
@@ -245,7 +249,7 @@ func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabel
 			Log.Fatalf("Error: %v", err)
 		}
 		mutex.Lock()
-		helper.AddLabelsAnnotations(node, lbl, ann)
+		helper.AddLabelsAnnotations(node, lbl, ann, trustLabelWithPrefix)
 		err = helper.UpdateNode(cli, node)
 		mutex.Unlock()
 		if err != nil {

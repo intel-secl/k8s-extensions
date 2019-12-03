@@ -72,6 +72,7 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 					geoVal := assetTagList[0]
 					newVal := geoVal.(string)
 					newVal = strings.Replace(newVal, " ", "", -1)
+					newVal = trustprefix + newVal
 					for _, match := range val.Values {
 						if match == newVal {
 							flag = true
