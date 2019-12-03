@@ -11,7 +11,14 @@ mkdir -p $K8S_EXTENSIONS_DIR
 mkdir -p $K8S_EXTENSIONS_CONFIG_DIR
 mkdir -p $K8S_EXTENSIONS_LOG_DIR
 cp isecl-k8s-extensions.sh $K8S_EXTENSIONS_DIR/ && chmod +x $K8S_EXTENSIONS_DIR/isecl-k8s-extensions.sh
-ln -s $K8S_EXTENSIONS_DIR/isecl-k8s-extensions.sh /usr/local/bin/isecl-k8s-extensions
+ln -s $K8S_EXTENSIONS_DIR/isecl-k8s-extensions.sh /usr/local/bin/isecl-k8s-extensions 2>/dev/null
+
+kubectl cluster-info 2>/dev/null
+if [ $? -ne 0 ]
+then
+   echo "Error while running kubectl cluster-info command Set Environment variable KUBECONFIG to path of admin.conf"
+   exit 1
+fi
 
 export KUBECONFIG=/etc/kubernetes/admin.conf
 

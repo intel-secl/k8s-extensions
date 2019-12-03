@@ -14,7 +14,7 @@ k8s_extenstions_uninstall(){
 
 k8s_extenstions_help(){
   echo "Usage:"
-  echo "isecl-k8s-extenstions <action> <component>"
+  echo "isecl-k8s-extensions <action> <component>"
   echo "action: start|stop|status|restart"
   echo "component: custom-controller extended-scheduler"
   

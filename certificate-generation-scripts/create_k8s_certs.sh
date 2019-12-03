@@ -143,6 +143,7 @@ check_exec 'whereis ansible' "$RESPONSE_MESSAGE_ANSIBLE_MISSING" $RESPONSE_ANSIB
 #        exit $RESPONSE_RW_ACCESS_PKI
 #fi
 
+
 while getopts :u:c:k:r:v:s:a:d:f:i:p:e:y:t:b:o:g:l:h opt
 do
 case "$opt" in
@@ -268,7 +269,7 @@ echo "done"
 echo -n "Provisioning access in K8S..."
 clusterrolename=cr_${user}_`echo $verbs | tr -d ','`_`echo $resources | tr -d ',.'`
 
-kubectl get clusterrole $clusterrolename
+kubectl get clusterrole $clusterrolename 2>/dev/null
 if [ $? -ne 0 ]
 then
   kubectl create clusterrole $clusterrolename --verb=${verbs} --resource=${resources} -o json
@@ -279,7 +280,8 @@ then
   fi
 fi
 
-kubectl get clusterrolebinding crb_${clusterrolename}
+
+kubectl get clusterrolebinding crb_${clusterrolename}  2>/dev/null
 if [ $? -ne 0 ]
 then
   kubectl create clusterrolebinding crb_${clusterrolename} --clusterrole=${clusterrolename} --user=${user}
