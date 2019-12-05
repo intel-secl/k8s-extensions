@@ -5,7 +5,8 @@ ConditionPathExists=/opt/isecl-k8s-extensions/isecl-k8s-controller/bin/isecl-k8s
 [Service]
 ExecStart=/usr/bin/isecl-k8s-controller -kubeconf=/etc/kubernetes/admin.conf -loglevel=info
 KillMode=process
-Restart=on-failure
+RestartSec=5s
+Restart=always
 RestartPreventExitStatus=255
 Type=simple
 
