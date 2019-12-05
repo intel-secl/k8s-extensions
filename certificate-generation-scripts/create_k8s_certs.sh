@@ -338,7 +338,6 @@ EOF
 
 export CLIENT_KEYSTORE=`ls $user_p12`
 export SERVER_KEYSTORE=`ls $trust_p12`
-export CLIENT_P12=`ls ${user}_KEYSTORES_NextSteps`
 export KEYSTORE_CONF=`ls ${user}_keystore.properties`
 
 
@@ -349,6 +348,5 @@ unset TRUST_STORE_PASS
 unset CERT_STORE_PASS
 unset CLIENT_KEYSTORE
 unset SERVER_KEYSTORE
-unset CLIENT_P12
 unset KEYSTORE_CONF 
 
