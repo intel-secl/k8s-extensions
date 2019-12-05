@@ -61,8 +61,9 @@ func (h K8sHelpers) GetNode(cli *k8sclient.Clientset, NodeName string) (*api.Nod
 
 func cleanupLabelsWithIsecl(n *api.Node, labelPrefix string) Labels{
 	var newNodeLabels = make(Labels, len(n.Labels))
+	iseclTrustedTag := labelPrefix + "trusted"
 	for k, v := range n.Labels{
-		if strings.HasPrefix(k, labelPrefix) {
+		if strings.HasPrefix(k, labelPrefix) && k != iseclTrustedTag {
 			continue
 		}
 		newNodeLabels[k] = v
