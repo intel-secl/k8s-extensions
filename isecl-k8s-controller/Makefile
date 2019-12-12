@@ -8,9 +8,7 @@
 
 GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
-GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
 VERSION := $(or ${GITTAG}, v0.0.0)
-
 DESCRIPTION="ISecL K8S Custom Controller"
 
 SERVICE=isecl-k8s-controller
