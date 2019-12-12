@@ -2,12 +2,9 @@
 DESCRIPTION="ISecL K8S Extensions"
 
 GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
-GITCOMMIT := $(shell git describe --always)
-GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
 VERSION := $(or ${GITTAG}, v0.0.0)
 
 .PHONY: scheduler, controller, all, clean
-
 
 # Install the binary
 installer:
@@ -26,3 +23,5 @@ all: clean installer
 .PHONY: clean
 clean:
 	rm -rf out
+	rm -rf isecl-k8s-scheduler/out/
+	rm -rf isecl-k8s-controller/out/ 
