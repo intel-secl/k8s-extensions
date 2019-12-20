@@ -1,28 +1,27 @@
 # ISecL K8S Extensions
 DESCRIPTION="ISecL K8S Extensions"
 
+GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
+VERSION := $(or ${GITTAG}, v0.0.0)
 
-VERSION := 1.6
-BUILD := `date +%FT%T%z`
-
-# LDFLAGS
-LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.Build=${BUILD}"
-
-.PHONY: installer, all, clean
+.PHONY: scheduler, controller, all, clean
 
 # Install the binary
 installer:
+	chmod +x build-k8s-extensions.sh
+	./build-k8s-extensions.sh	 
 	mkdir -p out/k8s-extensions
-	dist/linux/build-k8s-extensions.sh
-	cp -r certificate-generation-scripts extended-scheduler custom-controller policy.json isecl-k8s-extensions.sh install.sh out/k8s-extensions/
+	cp -r certificate-generation-scripts/* out/k8s-extensions/
+	cp isecl-k8s-scheduler/out/isecl-k8s-scheduler-$(VERSION).bin out/k8s-extensions/
+	cp isecl-k8s-controller/out/isecl-k8s-controller-$(VERSION).bin out/k8s-extensions/
+	cp isecl-k8s-extensions.sh install.sh out/k8s-extensions/
 	makeself out/k8s-extensions out/isecl-k8s-extensions-$(VERSION).bin "k8s extensions installer $(VERSION)" ./install.sh
 
-all: installer
+all: clean installer
 
 # Removes the generated service config and binary files
 .PHONY: clean
 clean:
-	@rm -rf out
-	@rm -rf custom-controller
-	@rm -rf extended-scheduler
-	@rm -rf k8s-extensions-build
+	rm -rf out
+	rm -rf isecl-k8s-scheduler/out/
+	rm -rf isecl-k8s-controller/out/ 

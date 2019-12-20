@@ -3,10 +3,9 @@
 k8s_extenstions_uninstall(){
   systemctl stop isecl-k8s-controller.service
   systemctl stop isecl-k8s-scheduler.service
-  rm /etc/systemd/system/isecl-k8s-controller.service
-  rm /etc/systemd/system/isecl-k8s-scheduler.service
+  systemctl disable isecl-k8s-controller.service
+  systemctl disable isecl-k8s-scheduler.service
   rm -rf /opt/isecl-k8s-extensions
-  rm -rf /root/attestation-hub-keystores
   rm /usr/local/bin/isecl-k8s-extensions
   kubectl delete clusterrole cr_root_getlistdeletepatchdeletecollectioncreateupdate_hostattributescrdiseclintelcom
   kubectl delete clusterrolebinding crb_cr_root_getlistdeletepatchdeletecollectioncreateupdate_hostattributescrdiseclintelcom
@@ -15,7 +14,7 @@ k8s_extenstions_uninstall(){
 
 k8s_extenstions_help(){
   echo "Usage:"
-  echo "isecl-k8s-extenstions <action> <component>"
+  echo "isecl-k8s-extensions <action> <component>"
   echo "action: start|stop|status|restart"
   echo "component: custom-controller extended-scheduler"
   

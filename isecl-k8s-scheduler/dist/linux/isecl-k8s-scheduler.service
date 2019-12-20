@@ -1,0 +1,14 @@
+[Unit]
+Description=ISecL k8s extended scheduler
+ConditionPathExists=/opt/isecl-k8s-extensions/isecl-k8s-scheduler/bin/isecl-k8s-scheduler
+
+[Service]
+ExecStart=/usr/bin/isecl-k8s-scheduler -loglevel=info
+KillMode=process
+Restart=on-failure
+RestartPreventExitStatus=255
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+Alias=isecl-k8s-scheduler.service

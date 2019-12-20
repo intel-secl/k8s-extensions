@@ -7,9 +7,9 @@
 # The script can used by a client of the Kubernetes API to:
 # 1) Generate X509 Client Certs signed by the Root CA of the Kubernetes Master for authentication
 # 2) Provision the desired access to resources in the Kubernetes configuration
-# 3) Package the Kubernetes API's Server Certificate into a Java KeyStore (JKS) aka Trust Store
-# 4) Package the certs from step 1 into another JKS aka Cert Store
-# The JKS files generated are protected by a randomly generated passphrase. This is provided in a JKS_NextSteps file along with the output.
+# 3) Package the Kubernetes API's Server Certificate into a Java KeyStore (PKCS12) aka Trust Store
+# 4) Package the certs from step 1 into another PKCS12 aka Cert Store
+# The PKCS12 files generated are protected by a randomly generated passphrase. This is provided in a P12_NextSteps file along with the output.
 
 # Pre-requisites:
 # Script should be executed:
@@ -36,9 +36,9 @@
 
 # Output:
 # Two keystore files: 
-# 1) The Kubernetes API client certificate keypair is packaged into a <username>_k8s_client.jks 
-# 2) Server certificate keypair is packaged into a <username>_k8s_trust.jks
-# 3) Tenant Configuration JSON template for the keystores is also provided in a <username>_JKS_NextSteps file.
+# 1) The Kubernetes API client certificate keypair is packaged into a <username>_k8s_client.p12
+# 2) Server certificate keypair is packaged into a <username>_k8s_trust.p12
+# 3) Tenant Configuration JSON template for the keystores is also provided in a <username>_P12_NextSteps file.
 # 4) Nova Plugin Tenant Configuration JSON template.
 
 #Example:
@@ -142,6 +142,7 @@ check_exec 'whereis ansible' "$RESPONSE_MESSAGE_ANSIBLE_MISSING" $RESPONSE_ANSIB
 #        echo $RESPONSE_MESSAGE_RW_ACCESS_PKI
 #        exit $RESPONSE_RW_ACCESS_PKI
 #fi
+
 
 while getopts :u:c:k:r:v:s:a:d:f:i:p:e:y:t:b:o:g:l:h opt
 do
@@ -268,7 +269,7 @@ echo "done"
 echo -n "Provisioning access in K8S..."
 clusterrolename=cr_${user}_`echo $verbs | tr -d ','`_`echo $resources | tr -d ',.'`
 
-kubectl get clusterrole $clusterrolename
+kubectl get clusterrole $clusterrolename 2>/dev/null
 if [ $? -ne 0 ]
 then
   kubectl create clusterrole $clusterrolename --verb=${verbs} --resource=${resources} -o json
@@ -279,7 +280,8 @@ then
   fi
 fi
 
-kubectl get clusterrolebinding crb_${clusterrolename}
+
+kubectl get clusterrolebinding crb_${clusterrolename}  2>/dev/null
 if [ $? -ne 0 ]
 then
   kubectl create clusterrolebinding crb_${clusterrolename} --clusterrole=${clusterrolename} --user=${user}
@@ -298,191 +300,46 @@ echo Client key generated at `ls ${user}.key`
 suffix1=""
 
 echo "Creating PKCS12 Keystore and Trust Store"
-while [ -r ${user}_k8s_client${suffix1}.jks ]
+while [ -r ${user}_k8s_client${suffix1}.p12 ]
 do
 	suffix1=$[ suffix1 + 1 ]
-	#echo "Keystore ${user}_k8s_client.jks already exists. Remove/rename and try again."
+	#echo "Keystore ${user}_k8s_client.p12 already exists. Remove/rename and try again."
 	#exit $ERR_KEYSTORE_EXIST
 done
 
 suffix2=""
-while [ -r ${user}_k8s_trust${suffix2}.jks ]
+while [ -r ${user}_k8s_trust${suffix2}.p12 ]
 do
 	suffix2=$[ suffix2 + 1 ]
-	#echo "Trust store ${user}_k8s_trust.jks already exists. Remove/rename and try again."
+	#echo "Trust store ${user}_k8s_trust.p12 already exists. Remove/rename and try again."
 	#exit $ERR_TRUST_STORE_EXIST
 done
 
-user_jks=${user}_k8s_client${suffix1}.jks
-trust_jks=${user}_k8s_trust${suffix2}.jks
+user_p12=${user}_k8s_client${suffix1}.p12
+trust_p12=${user}_k8s_trust${suffix2}.p12
 
 export TRUST_STORE_PASS=`openssl rand -base64 128 | tr -dc _A-Z-a-z-0-9 | head -c64`
 export CERT_STORE_PASS=`openssl rand -base64 128 | tr -dc _A-Z-a-z-0-9 | head -c64`
 openssl pkcs12 -export -in ${user}.crt -inkey ${user}.key -out ${user}.p12 -name ${user}_client -passout env:CERT_STORE_PASS 
-keytool -importkeystore -destkeystore $user_jks -deststorepass:env CERT_STORE_PASS -alias ${user}_client -srckeystore ${user}.p12 -srcstoretype PKCS12 -srcstorepass:env CERT_STORE_PASS
-keytool -import -keystore $trust_jks  -alias ${user}_k8s_server -file $k8s_server_cert -noprompt -deststorepass:env TRUST_STORE_PASS
+keytool -importkeystore -destkeystore $user_p12 -deststorepass:env CERT_STORE_PASS -alias ${user}_client -srckeystore ${user}.p12 -srcstoretype PKCS12 -srcstorepass:env CERT_STORE_PASS
+keytool -import -keystore $trust_p12  -alias ${user}_k8s_server -file $k8s_server_cert -noprompt -deststorepass:env TRUST_STORE_PASS
 
 
-#RESPONSE_SUCCESS_CONFIG_ATTHUB_INSTRUCTION="\n---------NEXT STEPS------------\nPlace the generated keystore (.jks) files:`ls $user_jks $trust_jks` in attestation hub configuration folder.\nAdd the following to your tenant configuration:\nkubernetes.client.keystore /opt/attestation-hub/configuration/${user_jks}\nkubernetes.client.keystore.password ${CERT_STORE_PASS}\nkubernetes.server.keystore /opt/attestation-hub/configuration/${trust_jks}\nkubernetes.server.keystore.password ${TRUST_STORE_PASS}"
+#RESPONSE_SUCCESS_CONFIG_ATTHUB_INSTRUCTION="\n---------NEXT STEPS------------\nPlace the generated keystore (.p12) files:`ls $user_p12 $trust_p12` in attestation hub configuration folder.\nAdd the following to your tenant configuration:\nkubernetes.client.keystore /opt/attestation-hub/configuration/${user_p12}\nkubernetes.client.keystore.password ${CERT_STORE_PASS}\nkubernetes.server.keystore /opt/attestation-hub/configuration/${trust_p12}\nkubernetes.server.keystore.password ${TRUST_STORE_PASS}"
 
 
 
 cat > ${user}_keystore.properties<<EOF
-kubernetes.client.keystore=/opt/attestation-hub/configuration/`ls $user_jks`
+kubernetes.client.keystore=/opt/attestation-hub/configuration/`ls $user_p12`
 kubernetes.client.keystore.password=${CERT_STORE_PASS}
-kubernetes.server.keystore=/opt/attestation-hub/configuration/`ls $trust_jks`
+kubernetes.server.keystore=/opt/attestation-hub/configuration/`ls $trust_p12`
 kubernetes.server.keystore.password=${TRUST_STORE_PASS}
 EOF
 
-if [ "$vm_worker_enabled" == "true" ]
-then
-        cat > ${user}_JKS_NextSteps<<EOF
-			{
-			"name": "YOURTENANTNAME",
-			"plugins": [{
-					"name": "kubernetes",
-					"properties": [{
-						"key": "api.endpoint",
-						"value": "https://YOUR-K8S-END-POINT-URL:6443"
-					},
-					{
-						"key": "tenant.name",
-						"value": "YOURTENANTNAME"
-					},
-					{
-						"key": "plugin.provider",
-						"value": "com.intel.attestationhub.plugin.kubernetes.KubernetesPluginImpl"
-					},
-					{
-						"key": "tenant.kubernetes.keystore.config",
-						"value": "/opt/attestation-hub/configuration/`ls ${user}_keystore.properties`"
-					},
-					{
-						"key": "keystone.version",
-						"value": "${keystone_version}"
-					},
-					{
-						"key": "vm.worker.enabled",
-						"value": "${vm_worker_enabled}"
-					},
-					{
-						"key": "openstack.tenant.name",
-						"value": "${openstack_tenant}"
-					},
-					{
-						"key": "openstack.scope",
-						"value": "${openstack_scope}"
-					},
-					{
-						"key": "openstack.username",
-						"value": "${openstack_username}"
-					},
-					{
-						"key": "openstack.pass",
-						"value": "${openstack_pass}"
-					},
-					{
-						"key": "openstack.uri",
-						"value": "${openstack_uri}"
-					}
-			]
-	}]
-}
-EOF
-			
-			
-		cat > ${user}_nova_tenant.json<<EOF
-			{
-			"name": "<<tenant name>>",
-			"plugins": [{
-				"name": "nova",
-				"properties": [{
-						"key": "plugin.provider",
-						"value": "com.intel.attestationhub.plugin.nova.NovaPluginImpl"
-					},
-					{
-						"key": "api.endpoint",
-						"value": "<<openstack api endpoint>>"
-					},
-					{
-						"key": "auth.endpoint",
-						"value": "<<openstack auth endpoint>>"
-					},
-					{
-						"key": "auth.version",
-						"value": "v${keystone_version}"
-					},
-					{
-						"key": "user.name",
-						"value": "${openstack_username}"
-					},
-					{
-						"key": "user.password",
-						"value": "${openstack_pass}"
-					},
-					{
-						"key": "tenant.name",
-						"value": "${openstack_tenant}"
-					},
-					{
-						"key": "domain.name",
-						"value": "<<domain name>>"
-					}
-				]
-			}]
-			}
-EOF
-			
-else
-	cat > ${user}_JKS_NextSteps<<EOF
-			{
-			"name": "YOURTENANTNAME",
-			"plugins": [
-			  {
-				"name": "kubernetes",
-				"properties": [
-                                  {
-                                       "key": "user.name",
-                                        "value": "admin"
-                                  },
-                                  {
-                                       "key": "user.password",
-                                        "value": "password"
-                                  },
-				  {
-					"key": "api.endpoint",
-					"value": "https://YOUR-K8S-END-POINT-URL:6443"
-				  },
-				  {
-					"key": "tenant.name",
-					"value": "YOURTENANTNAME"
-				  },
-				  {
-					"key": "plugin.provider",
-					"value": "com.intel.attestationhub.plugin.kubernetes.KubernetesPluginImpl"
-				  },
-				  {
-					"key": "tenant.kubernetes.keystore.config",
-					"value": "/opt/attestation-hub/configuration/`ls ${user}_keystore.properties`"
-				  }		
-				]
-			  }
-			]
-			}
-EOF
-	
-
-fi
-
-
-export CLIENT_KEYSTORE=`ls $user_jks`
-export SERVER_KEYSTORE=`ls $trust_jks`
-export CLIENT_JKS=`ls ${user}_JKS_NextSteps`
+export CLIENT_KEYSTORE=`ls $user_p12`
+export SERVER_KEYSTORE=`ls $trust_p12`
 export KEYSTORE_CONF=`ls ${user}_keystore.properties`
 
-# Executing Ansible script
-#ansible-playbook --extra-vars "directory=$baremetal_path server_keystore=$SERVER_KEYSTORE client_keystore=$CLIENT_KEYSTORE 
-#client_jks=$CLIENT_JKS keystore_conf=$KEYSTORE_CONF container=$container docker_dir=$container_path docker=$docker_flag" keystores_copy.yml 
 
 # Clean up
 rm ${user}.p12 ${user}.csr ${user}-csr.json
@@ -491,5 +348,5 @@ unset TRUST_STORE_PASS
 unset CERT_STORE_PASS
 unset CLIENT_KEYSTORE
 unset SERVER_KEYSTORE
-unset CLIENT_JKS
 unset KEYSTORE_CONF 
+
