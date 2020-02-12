@@ -1,18 +1,14 @@
 module k8s_scheduler_cit_extension-k8s_extended_scheduler
 
 require (
-	github.com/PuerkitoBio/purell v0.0.0-20160728015603-8a290539e2e8
 	github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2
 	github.com/davecgh/go-spew v0.0.0-20170626231645-782f4967f2dc
 	github.com/dgrijalva/jwt-go v0.0.0-20160616191556-d2709f9f1f31
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff
 	github.com/emicklei/go-restful v0.0.0-20170410110728-ff4f55a20633
 	github.com/ghodss/yaml v0.0.0-20150909031657-73d445a93680
-	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7
 	github.com/gin-gonic/gin v0.0.0-20170702092826-d459835d2b07
 	github.com/go-openapi/jsonpointer v0.0.0-20160704185906-46af16f9f7b1
-	github.com/go-openapi/jsonreference v0.0.0-20160704190145-13c6e3589ad9
-	github.com/go-openapi/spec v0.0.0-20160808142527-6aced65f8501
 	github.com/go-openapi/swag v0.0.0-20160704191624-1d0bd113de87
 	github.com/gogo/protobuf v0.0.0-20170330071051-c0656edd0d9e
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
@@ -29,7 +25,6 @@ require (
 	golang.org/x/sys v0.0.0-20170901181214-7ddbeae9ae08
 	golang.org/x/text v0.0.0-20160726164857-2910a502d2bf
 	gopkg.in/go-playground/validator.v8 v8.0.0-20170730050235-5f1438d3fca6
-	gopkg.in/inf.v0 v0.0.0-20150911125757-3887ee99ecf0
 	gopkg.in/yaml.v2 v2.0.0-20150924142314-53feefa2559f
 	k8s.io/api v0.0.0-20170706234855-4b8fc5be9b77
 	k8s.io/apimachinery v0.0.0-20170706234830-21de1bffe600
