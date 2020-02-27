@@ -31,7 +31,7 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 - Run scripts to build the Extended Scheduler
 
 ```shell
-git clone https://gitlab.devtools.intel.com/sst/isecl/isecl-k8s-extenstions.git
+git clone https://github.com/intel-secl/k8s-extensions.git
 cd isecl-k8s-extensions/k8s-extended-scheduler
 make k8s-extended-scheduler
 ```
