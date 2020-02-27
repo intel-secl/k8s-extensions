@@ -44,8 +44,8 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 ## Build ISecL K8s Extenstions
 
 ```shell
-git clone https://github.com/intel-secl/isecl-k8s-extensions.git
-cd isecl-k8s-extensions
+git clone https://github.com/intel-secl/k8s-extensions.git
+cd k8s-extensions
 make all
 ```
 
