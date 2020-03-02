@@ -28,7 +28,7 @@
 
 # Example:
 # ./create_k8s_extsched_cert.sh -n "K8S Extended Scheduler" \
-# -s "10.242.131.141,kubernetesmaster3-desktop,kubernetesmaster3-desktop.iind.intel.com" \
+# -s "127.0.0.1,kubernetesmaster3-desktop,kubernetesmaster3-desktop.iind.intel.com" \
 # -c /etc/kubernetes/pki/ca.crt -k /etc/kubernetes/pki/ca.key
 # open ca.pem: no such file or directory
 # Creating Cert Signing Request
