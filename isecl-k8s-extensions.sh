@@ -9,6 +9,7 @@ k8s_extenstions_uninstall(){
   rm /usr/local/bin/isecl-k8s-extensions
   kubectl delete clusterrole cr_root_getlistdeletepatchdeletecollectioncreateupdate_hostattributescrdiseclintelcom
   kubectl delete clusterrolebinding crb_cr_root_getlistdeletepatchdeletecollectioncreateupdate_hostattributescrdiseclintelcom
+  kubectl delete clusterrolebinding crb_get_node_details
   systemctl daemon-reload
 }
 
