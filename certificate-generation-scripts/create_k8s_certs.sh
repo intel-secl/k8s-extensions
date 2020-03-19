@@ -292,6 +292,13 @@ then
   fi
 fi
 
+# add user to cluster role binding to get access to node details
+kubectl create clusterrolebinding crb_get_node_details --clusterrole=system:node --user=${user}
+if [ $? -ne 0 ]
+  then
+        # we rollback the operation
+        exit $RESPONSE_CREATECLUSTERROLE_FAIL
+fi
 echo "Done"
 
 echo Client Certificate generated at `ls ${user}.crt`
