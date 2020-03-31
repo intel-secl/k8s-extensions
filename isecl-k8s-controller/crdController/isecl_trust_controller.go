@@ -165,7 +165,7 @@ func (c *IseclHAController) runWorker() {
 func GetHaObjLabel(obj ha_schema.Host, node *api.Node, trustedPrefixConf string) (crdLabelAnnotate.Labels, crdLabelAnnotate.Annotations, error) {
 	assetTagsize := len(obj.Assettag)
 
-	var lbl = make(crdLabelAnnotate.Labels, assetTagsize+2)
+	var lbl = make(crdLabelAnnotate.Labels, assetTagsize+7)
 	var annotation = make(crdLabelAnnotate.Annotations, 1)
 	trustPresent := false
 	trustLabelWithPrefix, err := getPrefixFromConf(trustedPrefixConf)
@@ -177,7 +177,6 @@ func GetHaObjLabel(obj ha_schema.Host, node *api.Node, trustedPrefixConf string)
 	if !StringReg.MatchString(trustLabelWithPrefix) {
 		return nil, nil, errors.New("Invalid string formatted input")
 	}
-	
 	for key, val := range obj.Assettag {
                 labelkey := strings.Replace(key, " ", ".", -1)
                 labelkey = strings.Replace(labelkey, ":", ".", -1)
@@ -207,6 +206,12 @@ func GetHaObjLabel(obj ha_schema.Host, node *api.Node, trustedPrefixConf string)
 	expiry := strings.Replace(obj.Expiry, ":", ".", -1)
 	lbl[trustexpiry] = expiry
 	annotation[trustsignreport] = obj.SignedReport
+	lbl[sgxEnable] = obj.SgxEnabled
+	lbl[sgxSupported] = obj.SGXSupported
+	lbl[flcEnabled] = obj.FLCEnabled
+	lbl[tcbUpToDate] = obj.TCBUpToDate
+	lbl[epcMemory] = obj.EPCSize
+	Log.Info("lbl: ", lbl)
 
 	return lbl, annotation, nil
 }

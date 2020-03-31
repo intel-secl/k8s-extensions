@@ -31,7 +31,7 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 
 	if !keyExists(claims, ahreport){
 		Log.Errorf("ValidatePodWithAnnotation - Asset Tags not found for node.")
-		return false
+		return true
 	}
 
 	assetClaims := claims[ahreport].(map[string]interface{})

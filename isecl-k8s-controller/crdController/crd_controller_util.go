@@ -22,6 +22,11 @@ const (
 	trustexpiry     = "TrustTagExpiry"
 	trustlabel      = "trusted"
 	trustsignreport = "TrustTagSignedReport"
+	sgxEnable = "SGX-Enabled"
+	sgxSupported = "SGX-Supported"
+	flcEnabled = "FLC-Enabled"
+	tcbUpToDate = "TCBUpToDate"
+	epcMemory = "EPC-Memory"
 )
 
 type CrdDefinition struct {
