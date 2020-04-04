@@ -7,10 +7,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"k8s_custom_cit_controllers-k8s_custom_controllers/crdController"
-	"k8s_custom_cit_controllers-k8s_custom_controllers/util"
+	"intel/isecl/k8s-custom-controller/crdController"
+	"intel/isecl/k8s-custom-controller/util"
+	"os"
 	"sync"
+	"strconv"
 
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
@@ -30,19 +31,26 @@ func main() {
 
 	Log.Infof("Starting ISecL Custom Controller")
 
-	var Usage = func() {
-		fmt.Println("Usage: ./isecl-k8s-controller -loglevel=<loglevel> -kubeconf=<file path>")
-	}
+        logLevel := os.Getenv("LOG_LEVEL")
 
+        util.SetLogger(logLevel)
+
+	skipCrdCreate, err := strconv.ParseBool(os.Getenv("SKIP_CRD_CREATE"))
+	if err != nil {
+		Log.Info("Error while parsing variable config SKIP_CRD_CREATE error: %v, setting SKIP_CRD_CREATE to true", err)
+		skipCrdCreate = false
+	}
+	Log.Infof("SKIP_CRD_CREATE is set to %v", skipCrdCreate)
+
+	deleteUntrustedNodes, err := strconv.ParseBool(os.Getenv("DELETE_UNTRUSTED_NODES"))
+	if err != nil {
+		Log.Info("Error while parsing variable config DELETE_UNTRUSTED_NODES error: %v, setting DELETE_UNTRUSTED_NODES to false", err)
+		deleteUntrustedNodes = false
+	}
+	Log.Infof("DELETE_UNTRUSTED_NODES is set to %v", deleteUntrustedNodes)
+	
 	kubeConf := flag.String("kubeconf", "", "Path to a kube config. ")
-	logLevel := flag.String("loglevel", "", "loglevel")
 	flag.Parse()
-
-	util.SetLogger(*logLevel)
-	if *kubeConf == "" {
-		Usage()
-		return
-	}
 
 	config, err := GetClientConfig(*kubeConf)
 	if err != nil {
@@ -59,15 +67,19 @@ func main() {
 	//Create mutex to sync operation between the two CRD threads
 	var crdmutex = &sync.Mutex{}
 
-	CrdDef := crdController.GetHACrdDef()
+        if !skipCrdCreate {
+                CrdDef := crdController.GetHACrdDef()
+                //crdController.NewIseclCustomResourceDefinition to create CRD
+                err = crdController.NewIseclCustomResourceDefinition(cs, &CrdDef)
+                if err != nil {
+                        Log.Errorf("Error in creating hostattributes CRD %v", err)
+                        return
+                }
+        }
 
-	//crdController.NewIseclCustomResourceDefinition to create CRD
-	err = crdController.NewIseclCustomResourceDefinition(cs, &CrdDef)
-	if err != nil {
-		Log.Errorf("Error in creating platform CRD %v", err)
-		return
-	}
-
+        if deleteUntrustedNodes {
+                crdController.DeleteUntrustedNodes = true
+        }
 	// Create a queue
 	queue := workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "iseclcontroller")
 

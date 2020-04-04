@@ -19,17 +19,19 @@ SERVICE=isecl-k8s-controller
 $(SERVICE):
 	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/$(SERVICE)/version.Version=$(VERSION) -X intel/isecl/$(SERVICE)/version.GitHash=$(GITCOMMIT)" -o out/$(SERVICE)
 
-# Bundles all the service config and the service binaries files
-.PHONY: installer
-installer: $(SERVICE)
-	mkdir -p out/installer
-	cp dist/linux/install.sh out/installer/ && chmod +x out/installer/install.sh
-	cp out/$(SERVICE) out/installer/
-	cp dist/linux/$(SERVICE).service out/installer/
-	makeself out/installer out/isecl-k8s-controller-$(VERSION).bin "ISecl K8s controller $(VERSION)" ./install.sh
+# Builds the docker image and creates the tar file from the image built
+.PHONY: docker
 
-all: clean installer
+docker: $(SERVICE)
+	mkdir -p out/ 
+ifeq ($(PROXY_EXISTS),1)
+	docker build --no-cache -t isecl/k8s-controller:latest --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -f ./dist/docker/Dockerfile ./out
+else
+	docker build --no-cache -t isecl/k8s-controller:latest  -f ./dist/docker/Dockerfile ./out
+endif
+	docker save isecl/k8s-controller:latest > ./out/docker-isecl-controller-$(VERSION).tar
+all: clean docker
 
-# Removes the generated service config and binary files
+# Removes the generated binary files and docker image as tar
 clean:
 	rm -rf out/

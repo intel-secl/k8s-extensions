@@ -1,0 +1,80 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secl
+
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secl-controller
+rules:
+- apiGroups: ["crd.isecl.intel.com"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch", "update", "patch", "delete"]
+  
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: secl-controller-binding
+  namespace: secl
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: secl-controller
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: secl
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: secl-controller
+  name: secl-controller
+  namespace: secl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secl-controller
+  template:
+    metadata:
+      labels:
+        app: secl-controller
+      name: secl-controller
+    spec:
+      containers:
+        - name: secl-controller
+          image: isecl/k8s-controller
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: no_proxy
+              value: 10.96.0.1
+            - name: SKIP_CRD_CREATE
+              value: "true"
+            - name: DELETE_UNTRUSTED_NODES
+              value: "false"
+            - name: LOG_LEVEL
+              value: "INFO"
+          volumeMounts:
+          - mountPath: /var/log/isecl-k8s-extensions
+            name: controller-log
+          - mountPath: /opt/isecl-k8s-extensions/config
+            name: controller-config
+      volumes:
+        - hostPath:
+            path: /var/log/isecl-k8s-extensions
+          name: controller-log
+        - hostPath:
+            path: /opt/isecl-k8s-extensions/config
+          name: controller-config

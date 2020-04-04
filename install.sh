@@ -1,5 +1,23 @@
 #!/bin/bash
 
+echo "Installing Pre-requisites"
+which cfssl
+if [ $? -ne 0 ]
+then
+  wget http://pkg.cfssl.org/R1.2/cfssl_linux-amd64
+  chmod +x cfssl_linux-amd64
+  mv cfssl_linux-amd64 /usr/local/bin/cfssl
+fi
+
+which cfssljson
+if [ $? -ne 0 ]
+then
+  wget http://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+  chmod +x cfssljson_linux-amd64
+  mv cfssljson_linux-amd64 /usr/local/bin/cfssljson
+fi
+
+
 K8S_EXTENSIONS_DIR=/opt/isecl-k8s-extensions
 CERTS=certificate-generation-scripts
 ATTESTATION_HUB_KEYSTORES=/opt/isecl-k8s-extensions/attestation-hub-keystores
@@ -10,8 +28,6 @@ TAG_PREFIX_CONF=tag_prefix.conf
 mkdir -p $K8S_EXTENSIONS_DIR
 mkdir -p $K8S_EXTENSIONS_CONFIG_DIR
 mkdir -p $K8S_EXTENSIONS_LOG_DIR
-cp isecl-k8s-extensions.sh $K8S_EXTENSIONS_DIR/ && chmod +x $K8S_EXTENSIONS_DIR/isecl-k8s-extensions.sh
-ln -s $K8S_EXTENSIONS_DIR/isecl-k8s-extensions.sh /usr/local/bin/isecl-k8s-extensions 2>/dev/null
 
 kubectl cluster-info 2>/dev/null
 if [ $? -ne 0 ]
@@ -32,10 +48,19 @@ cat > $K8S_EXTENSIONS_CONFIG_DIR/$TAG_PREFIX_CONF<<EOF
 }
 EOF
 
+echo ""
+echo "Deploying isecl k8s controller"
 
+#Load isecl k8s controller docker image into local repository
+docker load -i docker-isecl-controller-*.tar
 
-./isecl-k8s-controller-v*.bin
+#Untaint the master node for deploying isecl k8s controller on master node
+HOSTNAME=${HOSTNAME:-$(hostname)}
+kubectl taint nodes ${HOSTNAME} node-role.kubernetes.io/master:NoSchedule- 2>/dev/null
+kubectl apply -f yamls/crd-1.14.yaml
+kubectl apply -f yamls/secl-controller.yaml
 
+cp -r yamls $K8S_EXTENSIONS_DIR/
 echo ""
 echo "Installing Pre requisites for generating certificates"
 echo ""
@@ -46,10 +71,8 @@ chmod +x create_certs.sh
 if [ $? -ne 0 ]
 then
   echo "Error while creating certificates."
-  isecl-k8s-extensions uninstall
   exit 1
 fi
- 
 
 
 ./isecl-k8s-scheduler-v*.bin
@@ -57,5 +80,3 @@ fi
 systemctl daemon-reload
 systemctl restart kubelet
 systemctl restart isecl-k8s-scheduler.service
-systemctl restart isecl-k8s-controller.service
-

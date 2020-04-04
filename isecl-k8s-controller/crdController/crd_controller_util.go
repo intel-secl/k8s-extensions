@@ -7,7 +7,7 @@ package crdController
 
 import (
 	"time"
-	"k8s_custom_cit_controllers-k8s_custom_controllers/util"
+	"intel/isecl/k8s-custom-controller/util"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	clientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
