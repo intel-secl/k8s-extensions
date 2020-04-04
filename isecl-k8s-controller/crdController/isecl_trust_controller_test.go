@@ -6,10 +6,9 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdController
 
 import (
-	trust_schema "k8s_custom_cit_controllers-k8s_custom_controllers/crdSchema/iseclHostAttributesSchema"
+	trust_schema "intel/isecl/k8s-custom-controller/crdSchema/api/hostattribute/v1beta1"
 	"testing"
-
-	api "k8s.io/client-go/pkg/api/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestGetPLCrdDef(t *testing.T) {
@@ -40,7 +39,7 @@ func TestGetPlObjLabel(t *testing.T) {
 			"city.seatle": "true",
 		},
 	}
-	node := &api.Node{}
+	node := &corev1.Node{}
 	path := "/opt/isecl-k8s-extensions/bin/tag_prefix.conf"
 	recvlabel, recannotate := GetHaObjLabel(trustObj, node, path)
 	if _, ok := recvlabel[getPrefixFromConf(path)+"trusted"]; ok {

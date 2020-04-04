@@ -9,24 +9,30 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"k8s_custom_cit_controllers-k8s_custom_controllers/crdLabelAnnotate"
-	ha_schema "k8s_custom_cit_controllers-k8s_custom_controllers/crdSchema/iseclHostAttributesSchema"
+	"intel/isecl/k8s-custom-controller/crdLabelAnnotate"
+        ha_schema "intel/isecl/k8s-custom-controller/crdSchema/api/hostattribute/v1beta1"
+        ha_client "intel/isecl/k8s-custom-controller/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
+        metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"regexp"
+        "strconv"
 	"strings"
 	"sync"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
+	runtime2 "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sclient "k8s.io/client-go/kubernetes"
-	api "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 )
 
 var StringReg = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
+var DeleteUntrustedNodes = false
 
 const MAX_BYTES_LEN = 200
 
@@ -138,7 +144,7 @@ func (c *IseclHAController) Run(threadiness int, stopCh chan struct{}) {
 
 	// Let the workers stop when we are done
 	defer c.queue.ShutDown()
-	Log.Info("Starting Platformcrd controller")
+	Log.Info("Starting ISeclHAController")
 
 	go c.informer.Run(stopCh)
 
@@ -162,7 +168,7 @@ func (c *IseclHAController) runWorker() {
 }
 
 //GetHaObjLabel creates lables and annotations map based on HA CRD
-func GetHaObjLabel(obj ha_schema.Host, node *api.Node, trustedPrefixConf string) (crdLabelAnnotate.Labels, crdLabelAnnotate.Annotations, error) {
+func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf string) (crdLabelAnnotate.Labels, crdLabelAnnotate.Annotations, error) {
 	assetTagsize := len(obj.Assettag)
 
 	var lbl = make(crdLabelAnnotate.Labels, assetTagsize+2)
@@ -192,17 +198,17 @@ func GetHaObjLabel(obj ha_schema.Host, node *api.Node, trustedPrefixConf string)
 	for key, value := range node.Labels {
 		if key == trustLabelWithPrefix {
 			trustPresent = true
-			if value == obj.Trusted {
+			if value == strconv.FormatBool(obj.Trusted) {
 				Log.Info("No change in Trustlabel, updating Trustexpiry time only")
 			} else {
 				Log.Info("Updating Complete Trustlabel for the node")
-				lbl[trustLabelWithPrefix] = obj.Trusted
+				lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
 			}
 		}
 	}
 	if !trustPresent {
 		Log.Info("Trust value was not present on node adding for first time")
-		lbl[trustLabelWithPrefix] = obj.Trusted
+		lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
 	}
 	expiry := strings.Replace(obj.Expiry, ":", ".", -1)
 	lbl[trustexpiry] = expiry
@@ -250,29 +256,51 @@ func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabel
 		}
 		mutex.Lock()
 		helper.AddLabelsAnnotations(node, lbl, ann, trustLabelWithPrefix)
+                if DeleteUntrustedNodes {
+                        // Taint the node with no execute
+                        if err = helper.AddTaint(node, "untrusted", "true", "NoExecute"); err != nil {
+                                Log.Info("unable to add taints: %s", err.Error())
+                        }
+                }
+
 		err = helper.UpdateNode(cli, node)
-		mutex.Unlock()
 		if err != nil {
 			Log.Info("can't update node: %s", err.Error())
 		}
+                // Remove node
+                if DeleteUntrustedNodes && !ele.Trusted {
+                        err := helper.DeleteNode(cli, nodeName)
+                        if err != nil {
+                                Log.Info("can't delete update node: %s", err.Error())
+                        }
+                }
+		mutex.Unlock()
 	}
 }
 
 //NewIseclHAIndexerInformer returns informer for HA CRD object
 func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimitingInterface, crdMutex *sync.Mutex, trustedPrefixConf string) (cache.Indexer, cache.Controller) {
 	// Create a new clientset which include our CRD schema
-	crdcs, scheme, err := ha_schema.NewHAClient(config)
+	hacrdclient, err := ha_client.NewForConfig(config)
 	if err != nil {
 		Log.Fatalf("Failed to create new clientset for Platform CRD %v", err)
 	}
 
-	// Create a CRD client interface
-	hacrdclient := ha_schema.HAClient(crdcs, scheme, "default")
+        listWatch := &cache.ListWatch{
+                ListFunc: func(options metav1.ListOptions) (runtime2.Object, error) {
+                        // list all of the host attributes in the default namespace
+                        return hacrdclient.HostAttributesCrds(metav1.NamespaceDefault).List(options)
+                },
+                WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+                        // watch all of the host attributes in the default namespace
+                        return hacrdclient.HostAttributesCrds(metav1.NamespaceDefault).Watch(options)
+                },
+        }
 
 	//Create a PL CRD Helper object
 	hInf, cli := crdLabelAnnotate.Getk8sClientHelper(config)
 
-	return cache.NewIndexerInformer(hacrdclient.NewHAListWatch(), &ha_schema.HostAttributesCrd{}, 0, cache.ResourceEventHandlerFuncs{
+	return cache.NewIndexerInformer(listWatch, &ha_schema.HostAttributesCrd{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			Log.Info("Received Add event for ", key)
