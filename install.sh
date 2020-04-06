@@ -57,7 +57,7 @@ docker load -i docker-isecl-controller-*.tar
 #Untaint the master node for deploying isecl k8s controller on master node
 HOSTNAME=${HOSTNAME:-$(hostname)}
 kubectl taint nodes ${HOSTNAME} node-role.kubernetes.io/master:NoSchedule- 2>/dev/null
-kubectl apply -f yamls/crd-1.14.yaml
+kubectl apply -f yamls/crd-1.17.yaml
 kubectl apply -f yamls/secl-controller.yaml
 
 cp -r yamls $K8S_EXTENSIONS_DIR/
