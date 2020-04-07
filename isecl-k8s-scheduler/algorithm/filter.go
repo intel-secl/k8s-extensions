@@ -40,6 +40,9 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 							failedNodesMap[node.Name] = fmt.Sprintf("Annotation validation failed in extended-scheduler")
 						}
 					}
+				} else {
+					//If there is no TrustTagSignReport on Node then return the node.
+					result = append(result, node)
 				} 
 			}
 		} else {

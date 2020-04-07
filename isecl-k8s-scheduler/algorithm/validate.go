@@ -27,19 +27,22 @@ func keyExists(decoded map[string]interface{}, key string) bool {
 
 
 //ValidatePodWithAnnotation is to validate signed trusted and location report with pod keys and values
-func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string) bool {
-
+func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string) (bool, bool) {
+	iseclLabelExists := false
 	if !keyExists(claims, ahreport){
 		Log.Errorf("ValidatePodWithAnnotation - Asset Tags not found for node.")
-		return false
+		return false, iseclLabelExists
 	}
 
 	assetClaims := claims[ahreport].(map[string]interface{})
-        Log.Infoln("ValidatePodWithAnnotation - Validating node %v claims %v", nodeData, assetClaims)
+        Log.Infof("ValidatePodWithAnnotation - Validating node %v claims %v", nodeData, assetClaims)
 
 
 	for _, val := range nodeData {
-		//if val is trusted, it can be directly found in claims
+		if strings.Contains(val.Key, trustprefix){
+			iseclLabelExists = true
+		}
+                // if val is trusted, it can be directly found in claims
 		if sigVal, ok := claims[trusted]; ok {
 			tr := trustprefix + trusted
 			if val.Key == tr {
@@ -51,14 +54,14 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 							continue
 						} else {
 							Log.Infoln("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
-							return false
+							return false, iseclLabelExists
 						}
 					} else {
 						if nodeVal == sigVal {
 							continue
 						} else {
 							 Log.Infoln("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
-							return false
+							return false, iseclLabelExists
 						}
 					}
 				}
@@ -83,14 +86,14 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 					if flag {
 						continue
 					} else {
-						return false
+						return false, iseclLabelExists
 					}
 				}
 
 			}
 		}
 	}
-	return true
+	return true, iseclLabelExists
 }
 
 //ValidateNodeByTime is used for validate time for each node with current system time(Expiry validation)
