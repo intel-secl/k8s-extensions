@@ -10,6 +10,7 @@ GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
 VERSION := $(or ${GITTAG}, v0.0.0)
 DESCRIPTION="ISecL K8S Extended Scheduler"
+GOPATH := $(shell go env GOPATH)
 
 SERVICE=isecl-k8s-scheduler
 
