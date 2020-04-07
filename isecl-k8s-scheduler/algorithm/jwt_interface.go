@@ -114,12 +114,18 @@ func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement,
 
 	Log.Infof("CheckAnnotationAttrib - Parsed claims for %v",  claims)
 
-	verify := ValidatePodWithAnnotation(node, claims, trustPrefix)
+	verify, iseclLabelsExists := ValidatePodWithAnnotation(node, claims, trustPrefix)
 	if verify {
 		Log.Infoln("Node label validated against node annotations succesful")
 	} else {
 		Log.Infoln("Node Label did not match node annotation ")
 		return false
+	}
+
+	// Skip the validation of expiry time in SignTrustReport, if there is no isecl tag prefix in nodeAffinity 
+        // and allow launch of pods having no isecl specific tags in pod/deployment spec.
+	if !iseclLabelsExists{
+		return true	
 	}
 
 	trustTimeFlag := ValidateNodeByTime(claims)
