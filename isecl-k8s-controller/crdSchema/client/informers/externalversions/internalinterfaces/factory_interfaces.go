@@ -21,7 +21,7 @@ package internalinterfaces
 import (
 	time "time"
 
-	versioned "intel/isecl/k8s-custom-controller/crdSchema/client/clientset/versioned"
+	versioned "intel/isecl/k8s-custom-controller/v2/crdSchema/client/clientset/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	cache "k8s.io/client-go/tools/cache"

@@ -6,8 +6,8 @@ SPDX-License-Identifier: BSD-3-Clause
 package api
 
 import (
-	"k8s_scheduler_cit_extension-k8s_extended_scheduler/algorithm"
-	"k8s_scheduler_cit_extension-k8s_extended_scheduler/util"
+	"k8s_scheduler_cit_extension-k8s_extended_scheduler/v2/algorithm"
+	"k8s_scheduler_cit_extension-k8s_extended_scheduler/v2/util"
 
 	"github.com/gin-gonic/gin"
 	schedulerapi "k8s.io/kubernetes/plugin/pkg/scheduler/api"

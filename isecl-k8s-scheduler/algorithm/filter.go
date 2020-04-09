@@ -7,7 +7,7 @@ package algorithm
 
 import (
 	"fmt"
-	"k8s_scheduler_cit_extension-k8s_extended_scheduler/util"
+	"k8s_scheduler_cit_extension-k8s_extended_scheduler/v2/util"
 	"k8s.io/api/core/v1"
 	schedulerapi "k8s.io/kubernetes/plugin/pkg/scheduler/api"
 )

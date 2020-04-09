@@ -16,7 +16,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
-	"k8s_scheduler_cit_extension-k8s_extended_scheduler/util"
+	"k8s_scheduler_cit_extension-k8s_extended_scheduler/v2/util"
 	jwt "github.com/dgrijalva/jwt-go"
 	"k8s.io/api/core/v1"
 )
