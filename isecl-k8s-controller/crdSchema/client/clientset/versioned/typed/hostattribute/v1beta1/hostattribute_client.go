@@ -19,8 +19,8 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1beta1 "intel/isecl/k8s-custom-controller/crdSchema/api/hostattribute/v1beta1"
-	"intel/isecl/k8s-custom-controller/crdSchema/client/clientset/versioned/scheme"
+	v1beta1 "intel/isecl/k8s-custom-controller/v2/crdSchema/api/hostattribute/v1beta1"
+	"intel/isecl/k8s-custom-controller/v2/crdSchema/client/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

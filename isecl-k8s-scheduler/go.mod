@@ -1,4 +1,4 @@
-module k8s_scheduler_cit_extension-k8s_extended_scheduler
+module k8s_scheduler_cit_extension-k8s_extended_scheduler/v2
 
 require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578

@@ -7,8 +7,8 @@ package main
 
 import (
 	"flag"
-	"intel/isecl/k8s-custom-controller/crdController"
-	"intel/isecl/k8s-custom-controller/util"
+	"intel/isecl/k8s-custom-controller/v2/crdController"
+	"intel/isecl/k8s-custom-controller/v2/util"
 	"os"
 	"sync"
 	"strconv"
