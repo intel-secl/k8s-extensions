@@ -256,7 +256,7 @@ func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabel
 		}
 		mutex.Lock()
 		helper.AddLabelsAnnotations(node, lbl, ann, trustLabelWithPrefix)
-                if DeleteUntrustedNodes {
+                if !ele.Trusted {
                         // Taint the node with no execute
                         if err = helper.AddTaint(node, "untrusted", "true", "NoExecute"); err != nil {
                                 Log.Info("unable to add taints: %s", err.Error())
