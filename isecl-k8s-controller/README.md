@@ -2,25 +2,27 @@
 The ISecL Custom Controller creates/updates labels and annotation for K8s Worker Nodes whenever isecl.hostattributes crd is created or updated through K8s Kube Api Server.
 
 ## System Requirements
-- RHEL 7.5/7.6
-- Epel 7 Repo
+- RHEL 8.1
+- Epel 8 Repo
 - Proxy settings if applicable
 
 ## Software requirements
 - git
-- Go 11.4
+- `go` version >= `go1.12.1` & <= `go1.14.1`
 
-# Step By Step Build Instructions
-
-## Install required shell commands
-
-### Install `go 1.11.4` or newer
-The `ISecL Custom Controller` requires Go version 11.4 that has support for `go modules`. The build was validated with version 11.4 version of `go`. It is recommended that you use a newer version of `go` - but please keep in mind that the product has been validated with 1.11.4 and newer versions of `go` may introduce compatibility issues. You can use the following to install `go`.
+### Install tools from `yum`
 ```shell
-wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
-tar -xzf go1.11.4.linux-amd64.tar.gz
+sudo yum install -y git wget
+```
+
+### Install `go` version >= `go1.12.1` & <= `go1.14.1`
+The `ISecL K8s Extensions` requires Go version 1.12.1 that has support for `go modules`. The build was validated with the latest version go1.14.1 of `go`. It is recommended that you use go1.14.1 version of `go`. You can use the following to install `go`.
+```shell
+wget https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz
+tar -xzf go1.14.1.linux-amd64.tar.gz
 sudo mv go /usr/local
 export GOROOT=/usr/local/go
+export GOPATH=<path of project workspace>
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 ```
 
@@ -32,46 +34,26 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 ```shell
 git clone https://github.com/intel-secl/k8s-custom-controller.git
 cd k8s-custom-controller
-make
+make all
 ```
 
-# Installation of binary on kubernetes master machine
+## Deployment on Kubernetes master
+The isecl-k8s-controller is deployed as a container using k8s deployments.
 
-Pre-requisites
-Kubernetes cluster should be up and running
+Pre-requisite 
+Create HostAttributeCRD using yaml files located at k8s-custom-controller/yamls
 
-STEPS:
-1. Copy the complete source code to K8s master node and run below command for Installation
-	```	
-	make install
-	```
+```shell
+kubectl apply -f crd-1.14.yml (k8s version < v1.16)
+kubectl apply -f crd-1.17.yml (k8s version >= v1.16)
+```
 
-2. Edit the isecl-k8s-controller.service file as below with tag_prefix.conf file path
-	```
-	vi /etc/systemd/system/isecl-k8s-controller.service
+Load the controller image 
+``` docker load -i docker-isecl-k8s-controller-v2.1.tar
+```
 
-	ExecStart=/opt/isecl-k8s-extensions/bin/isecl-k8s-controller-1.0-SNAPSHOT -kubeconf=/etc/kubernetes/admin.conf -trustedprefixconf=<path>/tag_prefix.conf
-	```
-
-3. Run below commands to enable service daemon (to activate newly added service)
-	```
-	systemctl daemon-reload
-	```
-
-4. Run the custom controller using below command	
-
-	```
-	systemctl start isecl-k8s-controller.service
-	```
-
-5. To check status of this service run below command
-	```
-	systemctl status isecl-k8s-controller.service
-	```
-6. To stop this service run below command
-	```
-	systemctl stop isecl-k8s-controller.service
-	```
+Create Deployment.
+kubectl apply -f secl-controller.yml
 
 # Links
 https://01.org/intel-secl/
