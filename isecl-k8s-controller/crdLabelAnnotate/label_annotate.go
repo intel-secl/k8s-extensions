@@ -6,11 +6,12 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdLabelAnnotate
 
 import (
-	"github.com/pkg/errors"
-        corev1 "k8s.io/api/core/v1"
-        k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"intel/isecl/k8s-custom-controller/v2/util"
 	"strings"
+
+	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "k8s.io/client-go/kubernetes"
@@ -18,6 +19,7 @@ import (
 )
 
 var Log = util.GetLogger()
+
 type APIHelpers interface {
 
 	// GetNode returns the Kubernetes node on which this container is running.
@@ -31,12 +33,16 @@ type APIHelpers interface {
 	// UpdateNode updates the node via the API server using a client.
 	UpdateNode(*k8sclient.Clientset, *corev1.Node) error
 
-        // DeleteNode deletes the node name via the API server using a client.
-        DeleteNode(*k8sclient.Clientset, string) error
+	// DeleteNode deletes the node name via the API server using a client.
+	DeleteNode(*k8sclient.Clientset, string) error
 
-        // AddTaint modifies the supplied node's taints to add an additional taint
-        // effect should be one of: NoSchedule, PreferNoSchedule, NoExecute
-        AddTaint(n *corev1.Node, key string, value string, effect string) error
+	// AddTaint modifies the supplied node's taints to add an additional taint
+	// effect should be one of: NoSchedule, PreferNoSchedule, NoExecute
+	AddTaint(n *corev1.Node, key string, value string, effect string) error
+
+	// DeleteTaint modifies the supplied node's taints to delete a specified taint
+	// effect should be one of: NoSchedule, PreferNoSchedule, NoExecute
+	DeleteTaint(n *corev1.Node, key string, value string, effect string) error
 }
 
 // Implements main.APIHelpers
@@ -67,11 +73,10 @@ func (h K8sHelpers) GetNode(cli *k8sclient.Clientset, NodeName string) (*corev1.
 	return node, nil
 }
 
-
-func cleanupLabelsWithIsecl(n *corev1.Node, labelPrefix string) Labels{
+func cleanupLabelsWithIsecl(n *corev1.Node, labelPrefix string) Labels {
 	var newNodeLabels = make(Labels, len(n.Labels))
 	iseclTrustedTag := labelPrefix + "trusted"
-	for k, v := range n.Labels{
+	for k, v := range n.Labels {
 		if strings.HasPrefix(k, labelPrefix) && k != iseclTrustedTag {
 			continue
 		}
@@ -94,26 +99,62 @@ func (h K8sHelpers) AddLabelsAnnotations(n *corev1.Node, labels Labels, annotati
 	Log.Info(newNodeLabels)
 }
 
-//AddTaint applys labels and annotations to the node
+//AddTaint applies labels and annotations to the node
 //effect should be one of: NoSchedule, PreferNoSchedule, NoExecute
 func (h K8sHelpers) AddTaint(n *corev1.Node, key string, value string, effect string) error {
-        taintEffect, ok := map[string]corev1.TaintEffect{
-                "NoSchedule":       corev1.TaintEffectNoSchedule,
-                "PreferNoSchedule": corev1.TaintEffectPreferNoSchedule,
-                "NoExecute":        corev1.TaintEffectNoExecute,
-        }[effect]
+	taintEffect, ok := map[string]corev1.TaintEffect{
+		"NoSchedule":       corev1.TaintEffectNoSchedule,
+		"PreferNoSchedule": corev1.TaintEffectPreferNoSchedule,
+		"NoExecute":        corev1.TaintEffectNoExecute,
+	}[effect]
 
-        if !ok {
-                return errors.Errorf("Taint effect %v not valid", effect)
-        }
+	if !ok {
+		return errors.Errorf("Taint effect %v not valid", effect)
+	}
 
-        n.Spec.Taints = append(n.Spec.Taints, corev1.Taint{
-                Key:    key,
-                Value:  value,
-                Effect: taintEffect,
-        })
+	n.Spec.Taints = append(n.Spec.Taints, corev1.Taint{
+		Key:    key,
+		Value:  value,
+		Effect: taintEffect,
+	})
 
-        return nil
+	return nil
+}
+
+//DeleteTaint removes the taint from the node
+//effect should be one of: NoSchedule, PreferNoSchedule, NoExecute
+func (h K8sHelpers) DeleteTaint(n *corev1.Node, key string, value string, effect string) error {
+	taintEffect, ok := map[string]corev1.TaintEffect{
+		"NoSchedule":       corev1.TaintEffectNoSchedule,
+		"PreferNoSchedule": corev1.TaintEffectPreferNoSchedule,
+		"NoExecute":        corev1.TaintEffectNoExecute,
+	}[effect]
+
+	if !ok {
+		return errors.Errorf("Taint effect %v not valid", effect)
+	}
+
+	delT := corev1.Taint{
+		Key:    key,
+		Value:  value,
+		Effect: taintEffect,
+	}
+
+	// loop over the taints present on the node appending to a new list
+	// skipping the one we don't want
+	var newTaints []corev1.Taint
+	for _, t := range n.Spec.Taints {
+		if t.Key != delT.Key && t.Value != delT.Value && t.Effect != delT.Effect {
+			newTaints = append(newTaints, t)
+		} else {
+			Log.Infof("Dropped %s taint from node %v", effect, n)
+		}
+	}
+
+	// assign new list of taints back to node
+	n.Spec.Taints = newTaints
+
+	return nil
 }
 
 //UpdateNode updates the node API
@@ -129,18 +170,17 @@ func (h K8sHelpers) UpdateNode(c *k8sclient.Clientset, n *corev1.Node) error {
 
 //DeleteNode updates the node API
 func (h K8sHelpers) DeleteNode(c *k8sclient.Clientset, nodeName string) error {
-        // Send the deleted node to the apiserver.
-        err := c.CoreV1().Nodes().Delete(nodeName, &metav1.DeleteOptions{})
+	// Send the deleted node to the apiserver.
+	err := c.CoreV1().Nodes().Delete(nodeName, &metav1.DeleteOptions{})
 
-        // Node already deleted
-        if k8serrors.IsNotFound(err) {
-                return nil
-        }
+	// Node already deleted
+	if k8serrors.IsNotFound(err) {
+		return nil
+	}
 
-        if err != nil {
-                Log.Errorf("Error while deleting node label:", err.Error())
-                return err
-        }
-        return nil
+	if err != nil {
+		Log.Errorf("Error while deleting node label:", err.Error())
+		return err
+	}
+	return nil
 }
-

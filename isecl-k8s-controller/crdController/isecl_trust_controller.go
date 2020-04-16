@@ -32,7 +32,7 @@ import (
 )
 
 var StringReg = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
-var DeleteUntrustedNodes = false
+var TaintUntrustedNodes = false
 
 const MAX_BYTES_LEN = 200
 
@@ -256,24 +256,25 @@ func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabel
 		}
 		mutex.Lock()
 		helper.AddLabelsAnnotations(node, lbl, ann, trustLabelWithPrefix)
-                if !ele.Trusted {
-                        // Taint the node with no execute
-                        if err = helper.AddTaint(node, "untrusted", "true", "NoExecute"); err != nil {
-                                Log.Info("unable to add taints: %s", err.Error())
-                        }
-                }
+		// NoExec Taints on nodes enforced optionally
+		if TaintUntrustedNodes {
+			if !ele.Trusted {
+				// Taint the node with no execute
+				if err = helper.AddTaint(node, "untrusted", "true", "NoExecute"); err != nil {
+					Log.Error("Unable to add taints: %s", err.Error())
+				}
+			} else {
+				//Remove Taint from node with no execute
+				if err = helper.DeleteTaint(node, "untrusted", "true", "NoExecute"); err != nil {
+					Log.Error("Unable to delete taints: %s", err.Error())
+				}
+			}
+		}
 
 		err = helper.UpdateNode(cli, node)
 		if err != nil {
 			Log.Info("can't update node: %s", err.Error())
 		}
-                // Remove node
-                if DeleteUntrustedNodes && !ele.Trusted {
-                        err := helper.DeleteNode(cli, nodeName)
-                        if err != nil {
-                                Log.Info("can't delete update node: %s", err.Error())
-                        }
-                }
 		mutex.Unlock()
 	}
 }
@@ -330,3 +331,5 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 		},
 	}, cache.Indexers{})
 }
+
+
