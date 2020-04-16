@@ -42,12 +42,12 @@ func main() {
 	}
 	Log.Infof("SKIP_CRD_CREATE is set to %v", skipCrdCreate)
 
-	deleteUntrustedNodes, err := strconv.ParseBool(os.Getenv("DELETE_UNTRUSTED_NODES"))
+	taintUntrustedNodes, err := strconv.ParseBool(os.Getenv("TAINT_UNTRUSTED_NODES"))
 	if err != nil {
-		Log.Info("Error while parsing variable config DELETE_UNTRUSTED_NODES error: %v, setting DELETE_UNTRUSTED_NODES to false", err)
-		deleteUntrustedNodes = false
+		Log.Info("Error while parsing variable config TAINT_UNTRUSTED_NODES error: %v, setting TAINT_UNTRUSTED_NODES to false", err)
+		taintUntrustedNodes = false
 	}
-	Log.Infof("DELETE_UNTRUSTED_NODES is set to %v", deleteUntrustedNodes)
+	Log.Infof("TAINT_UNTRUSTED_NODES is set to %v", taintUntrustedNodes)
 	
 	kubeConf := flag.String("kubeconf", "", "Path to a kube config. ")
 	flag.Parse()
@@ -77,8 +77,8 @@ func main() {
                 }
         }
 
-        if deleteUntrustedNodes {
-                crdController.DeleteUntrustedNodes = true
+        if taintUntrustedNodes {
+                crdController.TaintUntrustedNodes = true
         }
 	// Create a queue
 	queue := workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "iseclcontroller")
