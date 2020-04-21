@@ -13,6 +13,7 @@ DESCRIPTION="ISecL K8S Custom Controller"
 
 SERVICE=isecl-k8s-controller
 
+PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
 .PHONY: $(SERVICE), installer, all, clean
 # Generate the service binary and executable
 .DEFAULT_GOAL: $(SERVICE)
