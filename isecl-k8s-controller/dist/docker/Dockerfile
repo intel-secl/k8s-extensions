@@ -1,7 +1,5 @@
 FROM registry.access.redhat.com/ubi8-init:8.1
 
-ENV http_proxy http://proxy-us.intel.com:911
-ENV https_proxy http://proxy-us.intel.com:911
 RUN yum -y install curl
 
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
