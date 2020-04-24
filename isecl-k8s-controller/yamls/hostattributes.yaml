@@ -1,3 +1,8 @@
+#/*
+# * Copyright (C) 2020 Intel Corporation
+# * SPDX-License-Identifier: BSD-3-Clause
+# */
+
 apiVersion: crd.isecl.intel.com/v1beta1
 kind: HostAttributesCrd
 metadata:

@@ -1,3 +1,8 @@
+#/*
+# * Copyright (C) 2020 Intel Corporation
+# * SPDX-License-Identifier: BSD-3-Clause
+# */
+
 FROM registry.access.redhat.com/ubi8-init:8.1
 
 RUN yum -y install curl
