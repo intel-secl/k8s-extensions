@@ -34,7 +34,7 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 ```shell
 git clone https://github.com/intel-secl/k8s-extenstions.git
 cd k8s-extensions/k8s-extended-scheduler
-make k8s-extended-scheduler
+make all
 ```
 
 # Links
@@ -75,12 +75,7 @@ https://01.org/intel-secl/
 	mv k8sextscheduler.pem server.crt
 	```
 
-2. Copy the output binary to K8s master and run the below command to install extended scheduler service
-
-    ```
-    ./isecl-k8s-scheduler.v1.5.1.bin
-    ```
-3. Create tag_prefix.conf file in k8s master machine in the path /opt/isecl-k8s-extensions/config with below json.
+2. Create tag_prefix.conf file in k8s master machine in the path /opt/isecl-k8s-extensions/config with below json.
 
     ```
        {
@@ -89,7 +84,7 @@ https://01.org/intel-secl/
     ```
 
 
-4. In order to bring up the Kubernetes cluster along with the extended scheduler, we need to:
+3. In order to bring up the Kubernetes cluster along with the extended scheduler, we need to:
 
 	(a) Create scheduler_policy.json file as per the template below. This contains the configration required by base scheduler to reach the extended scheduler. This file should be placed with the extended scheduler binary (inside /opt/isecl-k8s-extensions/bin). Rewrite URL as per IP address and port.
 	```
@@ -121,17 +116,24 @@ https://01.org/intel-secl/
 	```
 
 
-6.  Transfer the public key from the ISecl Attestation Hub and place it in /etc/kubernetes/pki/ folder
+4.  Transfer the public key from the ISecl Attestation Hub and place it in /etc/kubernetes/pki/ folder
 	(a) login to the machine where ISecl Attestation Reporting Hub is installed
 	(b) scp the AH's public key (or use other ways to transfer the key to k8s)
 		scp /opt/attestation-hub/configuration/hub_public_key.pem <<user>>@<<k8smasternode>>:/opt/isecl-k8s-extensions/isecl-k8s-scheduler/config/.
 
 
-7. Edit /opt/isecl-k8s-extenstions/isecl-extended-scheduler-config.json file with appropriate URL ip address of k8smaster, port, paths to certificates(generated in pre-requisites 1) and keys(from step 2)
+5. Edit /opt/isecl-k8s-extensions/isecl-extended-scheduler-config.json file with appropriate URL ip address of k8smaster, port, paths to certificates(generated in pre-requisites 1) and keys(from step 2)
+
+6. Copy the output docker tar to K8s master and run the below command to install extended scheduler service
+
+``` docker load -i docker-isecl-scheduler-v2.1.tar
+```
+
+Create Deployment.
+kubectl apply -f isecl-scheduler.yaml
 
 
-
-8. Configue the manifest of K8s Base scheduler
+7. Configure the manifest of K8s Base scheduler
 
         * Add scheduler-policy.json under kube-scheduler section /etc/kubernetes/manifests/kube-scheduler.yaml as mentioned below
 	```
@@ -139,7 +141,7 @@ https://01.org/intel-secl/
           containers:
 	  - command:
             - kube-scheduler
-              --policy-config-file : "<path_to_scheduler_policy.json>scheduler_policy.json"
+              --policy-config-file : "<path_to_scheduler_policy.json>scheduler-policy.json"
 	```
 
 	* Add mount path for isecl extended scheduler under container section /etc/kubernetes/manifests/kube-scheduler.yaml as mentioned below
@@ -169,33 +171,23 @@ https://01.org/intel-secl/
 	```
 
 
-9. Run below commands to enable service daemon (to activate newly added service)
+8. Run below commands to enable service daemon (to activate newly added service)
 
 	```
 	systemctl daemon-reload
 	```
 
-10. Run the extended scheduler using below command
-	```
-	systemctl start isecl-k8s-scheduler.service
-	```
-
-11. Restart Kubelet which restart all the k8s services including kube base schedular
+9. Restart Kubelet which restart all the k8s services including kube base schedular
 	```
 	systemctl restart kubelet
 	```
 
-12. To check status of this service run below command
+10. To check status of this Deployment run below command
 	```
-	systemctl status isecl-k8s-scheduler.service
-	```
-
-13. To stop this service run below command
-	```
-	systemctl stop isecl-k8s-scheduler.service
+	kubectl get deploy isecl-scheduler -n isecl
 	```
 
-14. To check the port where extended scheduler is listening, the default the port for extended schedular service is 8888
+11. To delete this Deployment run below command
 	```
-	netstat -tlpn | grep 8888
+	kubectl delete deploy isecl-scheduler -n isecl
 	```

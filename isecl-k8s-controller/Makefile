@@ -26,11 +26,11 @@ $(SERVICE):
 docker: $(SERVICE)
 	mkdir -p out/ 
 ifeq ($(PROXY_EXISTS),1)
-	docker build --no-cache -t isecl/k8s-controller:latest --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -f ./dist/docker/Dockerfile ./out
+	docker build --no-cache -t isecl/k8s-controller:$(VERSION) --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -f ./dist/docker/Dockerfile ./out
 else
-	docker build --no-cache -t isecl/k8s-controller:latest  -f ./dist/docker/Dockerfile ./out
+	docker build --no-cache -t isecl/k8s-controller:$(VERSION)  -f ./dist/docker/Dockerfile ./out
 endif
-	docker save isecl/k8s-controller:latest > ./out/docker-isecl-controller-$(VERSION).tar
+	docker save isecl/k8s-controller:$(VERSION) > ./out/docker-isecl-controller-$(VERSION).tar
 all: clean docker
 
 # Removes the generated binary files and docker image as tar

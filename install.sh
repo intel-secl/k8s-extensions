@@ -27,6 +27,9 @@ ATTESTATION_HUB_KEYSTORES=/opt/isecl-k8s-extensions/attestation-hub-keystores
 K8S_EXTENSIONS_CONFIG_DIR=$K8S_EXTENSIONS_DIR/config
 K8S_EXTENSIONS_LOG_DIR=/var/log/isecl-k8s-extensions
 TAG_PREFIX_CONF=tag_prefix.conf
+K8S_EXTENSIONS_SCHEDULER_DIR=$K8S_EXTENSIONS_DIR/isecl-k8s-scheduler
+K8S_EXTENSIONS_SCHEDULER_CONFIG_DIR=${K8S_EXTENSIONS_SCHEDULER_DIR}/config
+
 
 if [ -f "${JAVA_HOME}/jre/lib/security/java.security" ]; then
   echo "Setting default keystore to pkcs12"
@@ -36,6 +39,7 @@ fi
 mkdir -p $K8S_EXTENSIONS_DIR
 mkdir -p $K8S_EXTENSIONS_CONFIG_DIR
 mkdir -p $K8S_EXTENSIONS_LOG_DIR
+mkdir -p ${K8S_EXTENSIONS_SCHEDULER_CONFIG_DIR}
 
 kubectl cluster-info 2>/dev/null
 if [ $? -ne 0 ]
@@ -77,7 +81,7 @@ else
   kubectl apply -f yamls/crd-1.14.yaml
 fi
 
-kubectl apply -f yamls/secl-controller.yaml
+kubectl apply -f yamls/isecl-controller.yaml
 
 cp -r yamls $K8S_EXTENSIONS_DIR/
 echo ""
@@ -94,8 +98,29 @@ then
 fi
 
 
-./isecl-k8s-scheduler-v*.bin
+echo "Deploying ISecL K8S Extended Scheduler"
+
+cp isecl-extended-scheduler-config.json ${K8S_EXTENSIONS_SCHEDULER_CONFIG_DIR}/
+cp scheduler-policy.json ${K8S_EXTENSIONS_SCHEDULER_CONFIG_DIR}/
+
+
+chmod +x create_k8s_extsched_cert.sh
+
+echo ./create_k8s_extsched_cert.sh -n "K8S Extended Scheduler" -s "$MASTER_IP","$HOSTNAME" -c /etc/kubernetes/pki/ca.crt -k /etc/kubernetes/pki/ca.key
+
+./create_k8s_extsched_cert.sh -n "K8S Extended Scheduler" -s "$MASTER_IP","$HOSTNAME" -c "/etc/kubernetes/pki/ca.crt"  -k "/etc/kubernetes/pki/ca.key"
+
+if [ $? -ne 0 ]
+then
+  echo "Error while creating certificates for extended scheduler"
+  exit 1
+fi
+
+mv server.crt ${K8S_EXTENSIONS_SCHEDULER_CONFIG_DIR}/
+mv server.key ${K8S_EXTENSIONS_SCHEDULER_CONFIG_DIR}/
+
+docker load -i docker-isecl-scheduler-*.tar
+kubectl apply -f yamls/isecl-scheduler.yaml
 
 systemctl daemon-reload
 systemctl restart kubelet
-systemctl restart isecl-k8s-scheduler.service
