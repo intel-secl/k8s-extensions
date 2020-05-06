@@ -7,14 +7,14 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: secl
+  name: isecl
 
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: secl-controller
+  name: isecl-controller
 rules:
 - apiGroups: ["crd.isecl.intel.com"]
   resources: ["*"]
@@ -27,16 +27,16 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: secl-controller-binding
-  namespace: secl
+  name: isecl-controller-binding
+  namespace: isecl
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: secl-controller
+  name: isecl-controller
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: secl
+  namespace: isecl
 
 ---
 
@@ -44,19 +44,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: secl-controller
-  name: secl-controller
-  namespace: secl
+    app: isecl-controller
+  name: isecl-controller
+  namespace: isecl
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: secl-controller
+      app: isecl-controller
   template:
     metadata:
       labels:
-        app: secl-controller
-      name: secl-controller
+        app: isecl-controller
+      name: isecl-controller
     spec:
       tolerations:
         - key: node-role.kubernetes.io/master
@@ -71,12 +71,10 @@ spec:
                   key: node-role.kubernetes.io/master
                   operator: Exists
       containers:
-        - name: secl-controller
+        - name: isecl-controller
           image: isecl/k8s-controller
           imagePullPolicy: IfNotPresent
           env:
-            - name: no_proxy
-              value: 10.96.0.1
             - name: SKIP_CRD_CREATE
               value: "true"
             - name: TAINT_UNTRUSTED_NODES

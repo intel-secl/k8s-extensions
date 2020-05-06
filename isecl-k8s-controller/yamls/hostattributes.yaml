@@ -6,7 +6,7 @@
 apiVersion: crd.isecl.intel.com/v1beta1
 kind: HostAttributesCrd
 metadata:
-  name: secl-host-attributes
+  name: isecl-host-attributes
 spec:
     hostList:
     - hostName: "minikube"

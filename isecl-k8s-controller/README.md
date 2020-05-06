@@ -53,7 +53,7 @@ Load the controller image
 ```
 
 Create Deployment.
-kubectl apply -f secl-controller.yml
+kubectl apply -f isecl-controller.yml
 
 # Links
 https://01.org/intel-secl/
