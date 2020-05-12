@@ -45,7 +45,7 @@ func ValidateAnnotationByPublicKey(cipherText string, key *rsa.PublicKey) error 
 		return errors.New("Invalid token received, token must have 3 parts")
 	}
 
-	jwtHeaderRcvd, _ := base64.StdEncoding.DecodeString(parts[0])
+	jwtHeaderRcvd, _ := base64.URLEncoding.DecodeString(parts[0])
 	var jwtHeader JwtHeader
 	err := json.Unmarshal(jwtHeaderRcvd, &jwtHeader)
 	if err != nil {
@@ -64,13 +64,13 @@ func ValidateAnnotationByPublicKey(cipherText string, key *rsa.PublicKey) error 
 		return errors.New("Invalid Kid")
 	}
 
-	signedContent, err := base64.StdEncoding.DecodeString(parts[1])
+	signedContent, err := base64.URLEncoding.DecodeString(parts[1])
 	if err != nil {
 		Log.Errorf("Error while base64 decoding of trust report content %+v", err)
 		return err
 	}
 
-	signatureString, _ := base64.StdEncoding.DecodeString(parts[2])
+	signatureString, err := base64.URLEncoding.DecodeString(parts[2])
 	if err != nil {
 		Log.Errorf("Error while base64 decoding of signature %+v", err)
 		return err
@@ -81,13 +81,12 @@ func ValidateAnnotationByPublicKey(cipherText string, key *rsa.PublicKey) error 
 	return rsa.VerifyPKCS1v15(key, crypto.SHA384, h.Sum(nil), signatureString)
 }
 
-//JWTParseWithClaims is used for parsing and adding the annotation values in claims map
+//JWTParseWithClaims uses ParseUnverified from dgrijalva/jwt-go for parsing and adding the annotation values in claims map
+//ParseUnverified doesnt do signature validation. But however the signature validation is being done at ValidateAnnotationByPublicKey
 func JWTParseWithClaims(cipherText string, verifyKey *rsa.PublicKey, claim jwt.MapClaims) bool {
-	_, err := jwt.ParseWithClaims(cipherText, claim, func(token *jwt.Token) (interface{}, error) {
-		return verifyKey, nil
-	})
+	_, _, err := new(jwt.Parser).ParseUnverified(cipherText, claim)
 	if err != nil {
-		Log.Errorf("error in JWTParseWithClaims")
+		Log.Errorf("Error while parsing the annotation %v", err)
 		return false
 	}
 	return true
@@ -112,8 +111,9 @@ func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement,
 	}
 
 	//cipherText is the annotation applied to the node, claims is the parsed AH report assigned as the annotation
+
 	jwtParseStatus := JWTParseWithClaims(cipherText, verifyKey, claims)
-	if !jwtParseStatus{
+	if !jwtParseStatus {
 		return false
 	}
 
