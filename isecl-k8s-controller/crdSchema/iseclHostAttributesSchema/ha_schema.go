@@ -48,11 +48,11 @@ type Host struct {
 	Expiry       string            `json:"validTo"`
 	SignedReport string            `json:"signedTrustReport"`
 	Assettag     map[string]string `json:"assetTags"`
-	SgxEnabled      string `json:"sgx-enabled"`
-	SGXSupported   string `json:"sgx-supported"`
-	TCBUpToDate     string `json:"tcbUpToDate"`
-	EPCSize		string `json:"epc-size"`
-	FLCEnabled     string `json:"flc-enabled"`
+	SgxEnabled   string            `json:"sgx-enabled"`
+	SGXSupported string            `json:"sgx-supported"`
+	TCBUpToDate  string            `json:"tcbUpToDate"`
+	EPCSize      string            `json:"epc-size"`
+	FLCEnabled   string            `json:"flc-enabled"`
 }
 
 type Spec struct {

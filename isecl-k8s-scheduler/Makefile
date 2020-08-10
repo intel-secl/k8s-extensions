@@ -10,6 +10,8 @@ GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
 VERSION := $(or ${GITTAG}, v0.0.0)
 DESCRIPTION="ISecL K8S Extended Scheduler"
+GOPATH := $(shell go env GOPATH)
+PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
 
 SERVICE=isecl-k8s-scheduler
 
@@ -21,19 +23,18 @@ $(SERVICE):
 	@rm -f ${GOPATH}/pkg/mod/k8s.io/kubernetes*/plugin/pkg/scheduler/api/zz_generated.deepcopy.go
 	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/$(SERVICE)/version.Version=$(VERSION) -X intel/isecl/$(SERVICE)/version.GitHash=$(GITCOMMIT)" -o out/$(SERVICE)
 
-# Bundles the service config and the service binary files
-.PHONY: installer
-installer: $(SERVICE)
-	mkdir -p out/installer
-	cp dist/linux/install.sh out/installer/ && chmod +x out/installer/install.sh
-	cp dist/linux/isecl-extended-scheduler-config.json out/installer/
-	cp dist/linux/create_k8s_extsched_cert.sh out/installer/ && chmod +x out/installer/create_k8s_extsched_cert.sh
-	cp out/$(SERVICE) out/installer
-	cp dist/linux/$(SERVICE).service out/installer/
-	cp dist/linux/scheduler-policy.json out/installer/
-	makeself out/installer out/isecl-k8s-scheduler-$(VERSION).bin "ISecl K8s Scheduler $(VERSION)" ./install.sh
+.PHONY: docker
 
-all: clean installer
+docker: $(SERVICE)
+	mkdir -p out/ 
+ifeq ($(PROXY_EXISTS),1)
+	docker build --no-cache -t isecl/k8s-scheduler:$(VERSION) --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -f ./dist/docker/Dockerfile ./out
+else
+	docker build --no-cache -t isecl/k8s-scheduler:$(VERSION)  -f ./dist/docker/Dockerfile ./out
+endif
+	docker save isecl/k8s-scheduler:$(VERSION) > ./out/docker-isecl-scheduler-$(VERSION).tar
+
+all: clean docker
 # Removes the generated service config and binary files
 .PHONY: clean
 clean:

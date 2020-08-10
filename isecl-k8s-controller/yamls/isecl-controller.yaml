@@ -1,0 +1,95 @@
+#/*
+# * Copyright (C) 2020 Intel Corporation
+# * SPDX-License-Identifier: BSD-3-Clause
+# */
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: isecl
+
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: isecl-controller
+rules:
+- apiGroups: ["crd.isecl.intel.com"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch", "update", "patch", "delete"]
+  
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: isecl-controller-binding
+  namespace: isecl
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: isecl-controller
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: isecl
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: isecl-controller
+  name: isecl-controller
+  namespace: isecl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: isecl-controller
+  template:
+    metadata:
+      labels:
+        app: isecl-controller
+      name: isecl-controller
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                 -
+                  key: node-role.kubernetes.io/master
+                  operator: Exists
+      containers:
+        - name: isecl-controller
+          image: isecl/k8s-controller
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SKIP_CRD_CREATE
+              value: "true"
+            - name: TAINT_UNTRUSTED_NODES
+              value: "false"
+            - name: LOG_LEVEL
+              value: "INFO"
+          volumeMounts:
+          - mountPath: /var/log/isecl-k8s-extensions
+            name: controller-log
+          - mountPath: /opt/isecl-k8s-extensions/config
+            name: controller-config
+      volumes:
+        - hostPath:
+            path: /var/log/isecl-k8s-extensions
+          name: controller-log
+        - hostPath:
+            path: /opt/isecl-k8s-extensions/config
+          name: controller-config

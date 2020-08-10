@@ -7,7 +7,7 @@ package crdController
 
 import (
 	"time"
-	"k8s_custom_cit_controllers-k8s_custom_controllers/util"
+	"intel/isecl/k8s-custom-controller/v2/util"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	clientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -22,11 +22,11 @@ const (
 	trustexpiry     = "TrustTagExpiry"
 	trustlabel      = "trusted"
 	trustsignreport = "TrustTagSignedReport"
-	sgxEnable = "SGX-Enabled"
-	sgxSupported = "SGX-Supported"
-	flcEnabled = "FLC-Enabled"
-	tcbUpToDate = "TCBUpToDate"
-	epcMemory = "EPC-Memory"
+	sgxEnable       = "SGX-Enabled"
+	sgxSupported    = "SGX-Supported"
+	flcEnabled      = "FLC-Enabled"
+	tcbUpToDate     = "TCBUpToDate"
+	epcMemory       = "EPC-Memory"
 )
 
 type CrdDefinition struct {
@@ -53,7 +53,7 @@ func NewIseclCustomResourceDefinition(cs clientset.Interface, crdDef *CrdDefinit
 	}
 	_, err := cs.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
 	if err != nil && apierrors.IsAlreadyExists(err) {
-		Log.Infof("ISECL HostAttributes CRD object allready exisists")
+		Log.Infof("ISECL HostAttributes CRD object allready exists")
 		return nil
 	} else {
 		if err := waitForEstablishedCRD(cs, crd.Name); err != nil {

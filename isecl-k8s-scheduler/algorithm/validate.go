@@ -6,12 +6,13 @@ SPDX-License-Identifier: BSD-3-Clause
 package algorithm
 
 import (
-	jwt "github.com/dgrijalva/jwt-go"
-	"k8s.io/api/core/v1"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
+	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -36,7 +37,7 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 	Log.Infoln("ValidatePodWithAnnotation - Validating node %v claims %v", nodeData, assetClaims)
 
 	for _, val := range nodeData {
-		//if val is trusted, it can be directly found in claims
+		// if val is trusted, it can be directly found in claims
 		if sigVal, ok := claims[trusted]; ok {
 			tr := trustprefix + trusted
 			if val.Key == tr {
@@ -47,7 +48,7 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 						if nodeVal == sigVal {
 							continue
 						} else {
-							Log.Infoln("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+							Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
 							return false
 						}
 					} else {
@@ -107,9 +108,9 @@ func ValidateNodeByTime(claims jwt.MapClaims) int {
 
 		t := time.Now().UTC()
 		timeDiff := strings.Compare(trustedValidToTime, t.Format(time.RFC3339))
-		Log.Infoln("ValidateNodeByTime - ValidTo - %s |  current - %s | Diff - %s", trustedValidToTime, timeVal, timeDiff)
+		Log.Infof("ValidateNodeByTime - ValidTo - %s |  current - %s | Diff - %d", trustedValidToTime, timeVal, timeDiff)
 		if timeDiff >= 0 {
-			Log.Infoln("ValidateNodeByTime -timeDiff ", timeDiff)
+			Log.Infof("ValidateNodeByTime -timeDiff: %d ", timeDiff)
 			trustedTimeFlag = 1
 			Log.Infoln("ValidateNodeByTime -trustedTimeFlag ", trustedTimeFlag)
 		} else {

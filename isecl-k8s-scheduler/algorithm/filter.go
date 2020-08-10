@@ -7,9 +7,10 @@ package algorithm
 
 import (
 	"fmt"
-	"k8s_scheduler_cit_extension-k8s_extended_scheduler/util"
-	"k8s.io/api/core/v1"
-	schedulerapi "k8s.io/kubernetes/plugin/pkg/scheduler/api"
+	"intel/isecl/k8s-extended-scheduler/v2/util"
+
+	v1 "k8s.io/api/core/v1"
+	schedulerapi "k8s.io/kube-scheduler/extender/v1"
 )
 
 var Log = util.GetLogger()
@@ -25,7 +26,7 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 	confTrustPrefix := trustPrefix
 	//Check for presence of Affinity tag in pod specification
 	if pod.Spec.Affinity != nil && pod.Spec.Affinity.NodeAffinity != nil {
-		if pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil && len(pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions) !=0 {
+		if pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil && len(pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions) > 0 {
 			//get the nodeselector data
 			nodeSelectorData := pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
 			for _, node := range nodes.Items {
@@ -33,14 +34,17 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 				if cipherVal, ok := node.Annotations["TrustTagSignedReport"]; ok {
 					for _, nodeSelector := range nodeSelectorData {
 						//match the data from the pod node selector tag to the node annotation
-						Log.Infof("Checking annotation for node %s",node)
+						Log.Infof("Checking annotation for node %v", node)
 						if CheckAnnotationAttrib(cipherVal, nodeSelector.MatchExpressions, confTrustPrefix) {
 							result = append(result, node)
 						} else {
 							failedNodesMap[node.Name] = fmt.Sprintf("Annotation validation failed in extended-scheduler")
 						}
 					}
-				} 
+				} else {
+					//If there is no TrustTagSignReport on Node then return the node.
+					result = append(result, node)
+				}
 			}
 		} else {
 			for _, node := range nodes.Items {

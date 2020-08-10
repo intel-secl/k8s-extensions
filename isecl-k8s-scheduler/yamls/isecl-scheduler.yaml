@@ -1,0 +1,87 @@
+#/*
+# * Copyright (C) 2020 Intel Corporation
+# * SPDX-License-Identifier: BSD-3-Clause
+# */
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: isecl
+
+--- 
+apiVersion: v1
+kind: Service
+metadata: 
+  labels: 
+    app: isecl-scheduler
+    env: demo
+  name: isecl-scheduler-svc
+  namespace: isecl
+spec: 
+  ports: 
+    - 
+      nodePort: 30888
+      port: 8888
+      targetPort: 8888
+  selector: 
+    app: isecl-scheduler
+  type: NodePort
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: isecl-scheduler
+  name: isecl-scheduler
+  namespace: isecl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: isecl-scheduler
+  template:
+    metadata:
+      labels:
+        app: isecl-scheduler
+      name: isecl-scheduler
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                 -
+                  key: node-role.kubernetes.io/master
+                  operator: Exists
+      containers:
+        - name: isecl-scheduler
+          image: isecl/k8s-scheduler
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: LOG_LEVEL
+              value: "INFO"
+          volumeMounts:
+          - mountPath: /var/log/isecl-k8s-extensions
+            name: scheduler-log
+          - mountPath: /opt/isecl-k8s-extensions/isecl-k8s-scheduler/config
+            name: scheduler-config
+          - mountPath: /opt/isecl-k8s-extensions/config
+            name: scheduler-tag-prefix-config
+      volumes:
+        - hostPath:
+            path: /var/log/isecl-k8s-extensions
+          name: scheduler-log
+        - hostPath:
+            path: /opt/isecl-k8s-extensions/isecl-k8s-scheduler/config
+          name: scheduler-config
+        - hostPath:
+            path: /opt/isecl-k8s-extensions/config
+          name: scheduler-tag-prefix-config
+ 
