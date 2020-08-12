@@ -14,12 +14,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	"errors"
-	"intel/isecl/k8s-extended-scheduler/v2/util"
-	"strings"
-
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
+	"intel/isecl/k8s-extended-scheduler/v2/util"
 	v1 "k8s.io/api/core/v1"
+	"strings"
 )
 
 type JwtHeader struct {
@@ -45,12 +44,19 @@ func ValidateAnnotationByPublicKey(cipherText string, key *rsa.PublicKey) error 
 		return errors.New("Invalid token received, token must have 3 parts")
 	}
 
-	jwtHeaderRcvd, _ := base64.URLEncoding.DecodeString(parts[0])
-	var jwtHeader JwtHeader
-	err := json.Unmarshal(jwtHeaderRcvd, &jwtHeader)
+	jwtHeaderStr := parts[0]
+	if l := len(parts[0]) % 4; l > 0 {
+		jwtHeaderStr += strings.Repeat("=", 4-l)
+	}
+
+	jwtHeaderRcvd, err := base64.URLEncoding.DecodeString(jwtHeaderStr)
 	if err != nil {
-		Log.Errorf("%+v", err)
-		return errors.New("Failed to unmarshal jwt header")
+		return errors.Wrap(err, "Failed to decode jwt header")
+	}
+	var jwtHeader JwtHeader
+	err = json.Unmarshal(jwtHeaderRcvd, &jwtHeader)
+	if err != nil {
+		return errors.Wrap(err, "Failed to unmarshal jwt header")
 	}
 	pubKey := util.GetAHPublicKey()
 	block, _ := pem.Decode(pubKey)
@@ -64,20 +70,13 @@ func ValidateAnnotationByPublicKey(cipherText string, key *rsa.PublicKey) error 
 		return errors.New("Invalid Kid")
 	}
 
-	signedContent, err := base64.URLEncoding.DecodeString(parts[1])
-	if err != nil {
-		Log.Errorf("Error while base64 decoding of trust report content %+v", err)
-		return err
-	}
-
 	signatureString, err := base64.URLEncoding.DecodeString(parts[2])
 	if err != nil {
-		Log.Errorf("Error while base64 decoding of signature %+v", err)
-		return err
+		return errors.Wrap(err, "Error while base64 decoding of signature")
 	}
 
 	h := sha512.New384()
-	h.Write(signedContent)
+	h.Write([]byte(parts[0] + "." + parts[1]))
 	return rsa.VerifyPKCS1v15(key, crypto.SHA384, h.Sum(nil), signatureString)
 }
 
