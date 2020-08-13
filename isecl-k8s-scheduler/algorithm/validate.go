@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	ahreport string = "asset_tags"
+	ahreport string = "assetTags"
 	trusted  string = "trusted"
 )
 
@@ -28,13 +28,11 @@ func keyExists(decoded map[string]interface{}, key string) bool {
 //ValidatePodWithAnnotation is to validate signed trusted and location report with pod keys and values
 func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string) (bool, bool) {
 	iseclLabelExists := false
-	if !keyExists(claims, ahreport) {
-		Log.Errorf("ValidatePodWithAnnotation - Asset Tags not found for node.")
-		return false, iseclLabelExists
+	assetClaims := make(map[string]interface{})
+	if keyExists(claims, ahreport) {
+		assetClaims = claims[ahreport].(map[string]interface{})
+		Log.Infof("ValidatePodWithAnnotation - Validating node: %v, claims: %v", nodeData, assetClaims)
 	}
-
-	assetClaims := claims[ahreport].(map[string]interface{})
-	Log.Infof("ValidatePodWithAnnotation - Validating node: %v, claims: %v", nodeData, assetClaims)
 
 	for _, val := range nodeData {
 		if strings.Contains(val.Key, trustprefix) {
@@ -97,12 +95,12 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 //ValidateNodeByTime is used for validate time for each node with current system time(Expiry validation)
 func ValidateNodeByTime(claims jwt.MapClaims) int {
 	trustedTimeFlag := 0
-	if timeVal, ok := claims["valid_to"].(string); ok {
+	if timeVal, ok := claims["validTo"].(string); ok {
 
 		reg, err := regexp.Compile("[0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+")
 		Log.Debugf("ValidateNodeByTime reg %v", reg)
 		if err != nil {
-			Log.Errorf("Error parsing valid_to time: %v", err)
+			Log.Errorf("Error parsing validTo time: %v", err)
 			return trustedTimeFlag
 		}
 		newstr := reg.ReplaceAllString(timeVal, "")
