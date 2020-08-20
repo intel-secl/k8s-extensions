@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdLabelAnnotate
 
 import (
-	"intel/isecl/k8s-custom-controller/v2/util"
+	"intel/isecl/k8s-custom-controller/v3/util"
 	"strings"
 
 	"github.com/pkg/errors"

@@ -7,7 +7,7 @@ package algorithm
 
 import (
 	"fmt"
-	"intel/isecl/k8s-extended-scheduler/v2/util"
+	"intel/isecl/k8s-extended-scheduler/v3/util"
 
 	v1 "k8s.io/api/core/v1"
 	schedulerapi "k8s.io/kube-scheduler/extender/v1"
