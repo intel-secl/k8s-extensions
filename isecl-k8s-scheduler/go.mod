@@ -1,4 +1,4 @@
-module intel/isecl/k8s-extended-scheduler/v2
+module intel/isecl/k8s-extended-scheduler/v3
 
 require (
 	github.com/gorilla/handlers v1.4.2

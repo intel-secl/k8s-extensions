@@ -21,8 +21,8 @@ package v1beta1
 import (
 	"time"
 
-	v1beta1 "intel/isecl/k8s-custom-controller/v2/crdSchema/api/hostattribute/v1beta1"
-	scheme "intel/isecl/k8s-custom-controller/v2/crdSchema/client/clientset/versioned/scheme"
+	v1beta1 "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
+	scheme "intel/isecl/k8s-custom-controller/v3/crdSchema/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

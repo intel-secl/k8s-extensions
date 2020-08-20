@@ -16,7 +16,7 @@ import (
 	"encoding/pem"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
-	"intel/isecl/k8s-extended-scheduler/v2/util"
+	"intel/isecl/k8s-extended-scheduler/v3/util"
 	v1 "k8s.io/api/core/v1"
 	"strings"
 )

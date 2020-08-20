@@ -8,8 +8,8 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"intel/isecl/k8s-extended-scheduler/v2/algorithm"
-	"intel/isecl/k8s-extended-scheduler/v2/util"
+	"intel/isecl/k8s-extended-scheduler/v3/algorithm"
+	"intel/isecl/k8s-extended-scheduler/v3/util"
 	"io/ioutil"
 	"net/http"
 
