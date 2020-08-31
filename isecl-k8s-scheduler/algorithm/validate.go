@@ -41,7 +41,7 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 	for _, val := range nodeData {
 		// if val is trusted, it can be directly found in claims
 		switch val.Key {
-		case "SgxEnabled":
+		case "SGX-Enabled":
 			sigVal := claims[sgxEnabled]
 			for _, nodeVal := range val.Values {
 
@@ -54,7 +54,7 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 					return false
 				}
 			}
-		case "SGXSupported":
+		case "SGX-Supported":
 			sigVal := claims[sgxSupported]
 			for _, nodeVal := range val.Values {
 
@@ -80,21 +80,19 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 					return false
 				}
 			}
-		case "EPCSize":
+		case "EPC-Memory":
 			sigVal := claims[epcSize]
 			for _, nodeVal := range val.Values {
 
-				sigValTemp := sigVal.(int)
-				sigVal := strconv.FormatInt(int64(sigValTemp), 10)
-
-				if nodeVal == sigVal {
+				sigValTemp := sigVal.(string)
+				if nodeVal == sigValTemp {
 					continue
 				} else {
 					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
 					return false
 				}
 			}
-		case "FLCEnabled":
+		case "FLC-Enabled":
 			sigVal := claims[flcEnabled]
 			for _, nodeVal := range val.Values {
 
