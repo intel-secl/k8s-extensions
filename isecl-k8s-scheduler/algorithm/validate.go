@@ -18,6 +18,11 @@ import (
 const (
 	ahreport string = "assetTags"
 	trusted  string = "trusted"
+	sgxEnabled string = "sgx-enabled"
+	sgxSupported string = "sgx-supported"
+	tcbUpToDate string = "tcbUpToDate"
+	epcSize string = "epc-size"
+	flcEnabled string = "flc-enabled"
 )
 
 func keyExists(decoded map[string]interface{}, key string) bool {
@@ -26,8 +31,7 @@ func keyExists(decoded map[string]interface{}, key string) bool {
 }
 
 //ValidatePodWithAnnotation is to validate signed trusted and location report with pod keys and values
-func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string) (bool, bool) {
-	iseclLabelExists := false
+func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string) bool {
 	assetClaims := make(map[string]interface{})
 	if keyExists(claims, ahreport) {
 		assetClaims = claims[ahreport].(map[string]interface{})
@@ -36,57 +40,77 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 
 	for _, val := range nodeData {
 		// if val is trusted, it can be directly found in claims
-		if sigVal, ok := claims[trusted]; ok {
-			tr := trustprefix + trusted
-			if val.Key == tr {
-				for _, nodeVal := range val.Values {
-					if sigVal == true || sigVal == false {
-						sigValTemp := sigVal.(bool)
-						sigVal := strconv.FormatBool(sigValTemp)
-						if nodeVal == sigVal {
-							continue
-						} else {
-							Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
-							return false
-						}
-					} else {
-						if nodeVal == sigVal {
-							continue
-						} else {
-							Log.Infoln("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
-							return false
-						}
-					}
+		switch val.Key {
+		case "SgxEnabled":
+			sigVal := claims[sgxEnabled]
+			for _, nodeVal := range val.Values {
+
+				sigValTemp := sigVal.(bool)
+				sigVal := strconv.FormatBool(sigValTemp)
+				if nodeVal == sigVal {
+					continue
+				} else {
+					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+					return false
 				}
 			}
-		} else {
-			if geoKey, ok := assetClaims[val.Key]; ok {
-				assetTagList, ok := geoKey.([]interface{})
-				if ok {
-					flag := false
-					//Taking only first value from asset tag list assuming only one value will be there
-					geoVal := assetTagList[0]
-					newVal := geoVal.(string)
-					newVal = strings.Replace(newVal, " ", "", -1)
-					newVal = trustprefix + newVal
-					for _, match := range val.Values {
-						if match == newVal {
-							flag = true
-						} else {
-							Log.Infoln("ValidatePodWithAnnotation - Geo Asset Tags - Mismatch in %v field. Actual: %v | In Signature: %v ", geoKey, match, newVal)
-						}
-					}
-					if flag {
-						continue
-					} else {
-						return false
-					}
-				}
+		case "SGXSupported":
+			sigVal := claims[sgxSupported]
+			for _, nodeVal := range val.Values {
 
+				sigValTemp := sigVal.(bool)
+				sigVal := strconv.FormatBool(sigValTemp)
+				if nodeVal == sigVal {
+					continue
+				} else {
+					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+					return false
+				}
+			}
+		case "TCBUpToDate":
+			sigVal := claims[tcbUpToDate]
+			for _, nodeVal := range val.Values {
+
+				sigValTemp := sigVal.(bool)
+				sigVal := strconv.FormatBool(sigValTemp)
+				if nodeVal == sigVal {
+					continue
+				} else {
+					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+					return false
+				}
+			}
+		case "EPCSize":
+			sigVal := claims[epcSize]
+			for _, nodeVal := range val.Values {
+
+				sigValTemp := sigVal.(int)
+				sigVal := strconv.FormatInt(int64(sigValTemp), 10)
+
+				if nodeVal == sigVal {
+					continue
+				} else {
+					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+					return false
+				}
+			}
+		case "FLCEnabled":
+			sigVal := claims[flcEnabled]
+			for _, nodeVal := range val.Values {
+
+				sigValTemp := sigVal.(bool)
+				sigVal := strconv.FormatBool(sigValTemp)
+				if nodeVal == sigVal {
+					continue
+				} else {
+					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+					return false
+				}
 			}
 		}
+
 	}
-	return true
+return true
 }
 
 //ValidateNodeByTime is used for validate time for each node with current system time(Expiry validation)

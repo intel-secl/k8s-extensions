@@ -15,7 +15,6 @@ import (
         metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"regexp"
-        "strconv"
 	"strings"
 	"sync"
 	"time"
@@ -169,11 +168,9 @@ func (c *IseclHAController) runWorker() {
 
 //GetHaObjLabel creates lables and annotations map based on HA CRD
 func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf string) (crdLabelAnnotate.Labels, crdLabelAnnotate.Annotations, error) {
-	assetTagsize := len(obj.Assettag)
 
-	var lbl = make(crdLabelAnnotate.Labels, assetTagsize+7)
+	var lbl = make(crdLabelAnnotate.Labels, 5)
 	var annotation = make(crdLabelAnnotate.Annotations, 1)
-	trustPresent := false
 	trustLabelWithPrefix, err := getPrefixFromConf(trustedPrefixConf)
 
 	if err != nil {
@@ -193,31 +190,24 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf stri
 
 	trustLabelWithPrefix = trustLabelWithPrefix + trustlabel
 
-	//Comparing with existing node labels
-	for key, value := range node.Labels {
-		if key == trustLabelWithPrefix {
-			trustPresent = true
-			if value == strconv.FormatBool(obj.Trusted) {
-				Log.Info("No change in Trustlabel, updating Trustexpiry time only")
-			} else {
-				Log.Info("Updating Complete Trustlabel for the node")
-				lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
-			}
-		}
+	if obj.SignedReport != "" {
+		annotation[trustsignreport] = obj.SignedReport
 	}
-	if !trustPresent {
-		Log.Info("Trust value was not present on node adding for first time")
-		lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
+	if obj.SgxEnabled != "" {
+		lbl[sgxEnable] = obj.SgxEnabled
 	}
-	expiry := strings.Replace(obj.Expiry, ":", ".", -1)
-	lbl[trustexpiry] = expiry
-	annotation[trustsignreport] = obj.SignedReport
-	lbl[sgxEnable] = obj.SgxEnabled
-	lbl[sgxSupported] = obj.SGXSupported
-	lbl[flcEnabled] = obj.FLCEnabled
-	lbl[tcbUpToDate] = obj.TCBUpToDate
-	lbl[epcMemory] = obj.EPCSize
-	Log.Info("lbl: ", lbl)
+	if obj.SGXSupported != "" {
+		lbl[sgxSupported] = obj.SGXSupported
+	}
+	if obj.FLCEnabled != "" {
+		lbl[flcEnabled] = obj.FLCEnabled
+	}
+	if obj.TCBUpToDate != "" {
+		lbl[tcbUpToDate] = obj.TCBUpToDate
+	}
+	if obj.EPCSize != "" {
+		lbl[epcMemory] = obj.EPCSize
+	}
 
 	return lbl, annotation, nil
 }

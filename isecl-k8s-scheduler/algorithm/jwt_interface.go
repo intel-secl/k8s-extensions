@@ -121,12 +121,14 @@ func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement,
 	verify := ValidatePodWithAnnotation(node, claims, trustPrefix)
 	if verify {
 		Log.Infoln("Node label validated against node annotations succesful")
+		return true
 	} else {
 		Log.Infoln("Node Label did not match node annotation ")
 		return false
 	}
 
-	trustTimeFlag := ValidateNodeByTime(claims)
+	//skip for skc need to revisit after skc is merged with isecl
+	/*trustTimeFlag := ValidateNodeByTime(claims)
 
 	if trustTimeFlag == 1 {
 		Log.Infoln("Attested node validity time check passed")
@@ -134,5 +136,5 @@ func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement,
 	} else {
 		Log.Infoln("Attested node validity time has expired")
 		return false
-	}
+	}*/
 }
