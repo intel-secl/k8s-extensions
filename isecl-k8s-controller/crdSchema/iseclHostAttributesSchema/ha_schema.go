@@ -44,15 +44,15 @@ type HostAttributesCrd struct {
 
 type Host struct {
 	Hostname     string            `json:"hostName"`
-	Trusted      string            `json:"trusted"`
-	Expiry       string            `json:"validTo"`
+	Trusted      string            `json:"trusted,omitempty"`
+	Expiry       string            `json:"validTo,omitempty"`
 	SignedReport string            `json:"signedTrustReport"`
-	Assettag     map[string]string `json:"assetTags"`
-	SgxEnabled   string            `json:"sgx-enabled"`
-	SGXSupported string            `json:"sgx-supported"`
-	TCBUpToDate  string            `json:"tcbUpToDate"`
-	EPCSize      string            `json:"epc-size"`
-	FLCEnabled   string            `json:"flc-enabled"`
+	Assettag     map[string]string `json:"assetTags,omitempty"`
+	SgxEnabled   string            `json:"sgx-enabled,omitempty"`
+	SGXSupported string            `json:"sgx-supported,omitempty"`
+	TCBUpToDate  string            `json:"tcbUpToDate,omitempty"`
+	EPCSize      string            `json:"epc-size,omitempty"`
+	FLCEnabled   string            `json:"flc-enabled,omitempty"`
 }
 
 type Spec struct {
