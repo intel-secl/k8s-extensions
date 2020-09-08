@@ -6,23 +6,24 @@ SPDX-License-Identifier: BSD-3-Clause
 package main
 
 import (
-	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/mux"
+	"intel/isecl/k8s-extended-scheduler/v3/api"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 func TestExtendedScheduler(t *testing.T) {
 	fmt.Println("Starting extended scheduler Test...")
 	gin.SetMode(gin.TestMode)
 
-	testrouter, srv := SetupRouter()
+	testrouter := mux.NewRouter()
+	testrouter.HandleFunc("/", extendedScheduler).Methods("GET")
+	testrouter.HandleFunc("/filter", api.FilterHandler).Methods("POST")
 
-	//test 404 not found error code for the post operation
+	// test POST /filter with empty body
 	req, err := http.NewRequest("POST", "/filter", nil)
 	if err != nil {
 		fmt.Println(err)
@@ -30,11 +31,35 @@ func TestExtendedScheduler(t *testing.T) {
 
 	resp := httptest.NewRecorder()
 	testrouter.ServeHTTP(resp, req)
-	if resp.Code != http.StatusNotFound {
+	if resp.Code != http.StatusBadRequest {
 		t.Fatalf("Expecting status 404 not found : got : %v", resp.Code)
 	}
 
-	//test 200 code to check that the extended scheduler server is up
+	// test POST /filter with valid body
+	req, err = http.NewRequest("POST", "/filter", nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	resp = httptest.NewRecorder()
+	testrouter.ServeHTTP(resp, req)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("Expecting status 200 not found : got : %v", resp.Code)
+	}
+
+	// test POST /filter with valid body
+	req, err = http.NewRequest("POST", "/filter", nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	resp = httptest.NewRecorder()
+	testrouter.ServeHTTP(resp, req)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("Expecting status 200 not found : got : %v", resp.Code)
+	}
+
+	// test GET / with valid body
 	req, err = http.NewRequest("GET", "/", nil)
 	if err != nil {
 		fmt.Println(err)
@@ -42,11 +67,7 @@ func TestExtendedScheduler(t *testing.T) {
 
 	resp = httptest.NewRecorder()
 	testrouter.ServeHTTP(resp, req)
-	if resp.Code != 200 {
+	if resp.Code != http.StatusOK {
 		t.Fatalf("Expecting status 200 found : got : %v", resp.Code)
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	srv.Shutdown(ctx)
 }

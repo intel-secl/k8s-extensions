@@ -10,12 +10,12 @@ import (
 	"errors"
 	"fmt"
 	"intel/isecl/k8s-custom-controller/v3/crdLabelAnnotate"
-        ha_schema "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
-        ha_client "intel/isecl/k8s-custom-controller/v3/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
-        metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	ha_schema "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
+	ha_client "intel/isecl/k8s-custom-controller/v3/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"regexp"
-        "strconv"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,15 +23,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	runtime2 "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 )
 
-var StringReg = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
+var trustLabelRegex = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
 var TaintUntrustedNodes = false
 
 const MAX_BYTES_LEN = 200
@@ -43,7 +43,7 @@ type IseclHAController struct {
 }
 
 type Config struct {
-	Trusted string `"json":"trusted"`
+	Trusted string `json:"trusted"`
 }
 
 func NewIseclHAController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller) *IseclHAController {
@@ -167,11 +167,12 @@ func (c *IseclHAController) runWorker() {
 	}
 }
 
-//GetHaObjLabel creates lables and annotations map based on HA CRD
+//GetHaObjLabel creates labels and annotations map based on HA CRD
 func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf string) (crdLabelAnnotate.Labels, crdLabelAnnotate.Annotations, error) {
-	assetTagsize := len(obj.Assettag)
+	assetTagSize := len(obj.AssetTag)
+	hwFeaturesSize := len(obj.HardwareFeatures)
 
-	var lbl = make(crdLabelAnnotate.Labels, assetTagsize+2)
+	var lbl = make(crdLabelAnnotate.Labels, assetTagSize+hwFeaturesSize+2)
 	var annotation = make(crdLabelAnnotate.Annotations, 1)
 	trustPresent := false
 	trustLabelWithPrefix, err := getPrefixFromConf(trustedPrefixConf)
@@ -180,17 +181,23 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf stri
 		return nil, nil, err
 	}
 
-	if !StringReg.MatchString(trustLabelWithPrefix) {
+	if !trustLabelRegex.MatchString(trustLabelWithPrefix) {
 		return nil, nil, errors.New("Invalid string formatted input")
 	}
-	
-	for key, val := range obj.Assettag {
-                labelkey := strings.Replace(key, " ", ".", -1)
-                labelkey = strings.Replace(labelkey, ":", ".", -1)
-                labelkey = trustLabelWithPrefix + labelkey
-                lbl[labelkey] = val
-        }
 
+	for key, val := range obj.AssetTag {
+		labelkey := strings.Replace(key, " ", ".", -1)
+		labelkey = strings.Replace(labelkey, ":", ".", -1)
+		labelkey = trustLabelWithPrefix + labelkey
+		lbl[labelkey] = val
+	}
+
+	for key, val := range obj.HardwareFeatures {
+		labelkey := strings.Replace(key, " ", ".", -1)
+		labelkey = strings.Replace(labelkey, ":", ".", -1)
+		labelkey = trustLabelWithPrefix + labelkey
+		lbl[labelkey] = val
+	}
 
 	trustLabelWithPrefix = trustLabelWithPrefix + trustlabel
 
@@ -199,18 +206,18 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf stri
 		if key == trustLabelWithPrefix {
 			trustPresent = true
 			if value == strconv.FormatBool(obj.Trusted) {
-				Log.Info("No change in Trustlabel, updating Trustexpiry time only")
+				Log.Infof("No change in Trustlabel: %s", node.Name)
 			} else {
-				Log.Info("Updating Complete Trustlabel for the node")
+				Log.Infof("Updating complete Trustlabel for the node: %s", node.Name)
 				lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
 			}
 		}
 	}
 	if !trustPresent {
-		Log.Info("Trust value was not present on node adding for first time")
+		Log.Info("Trust value was not present on node adding for first time: %s", node.Name)
 		lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
 	}
-	expiry := strings.Replace(obj.Expiry, ":", ".", -1)
+	expiry := strings.Replace(obj.Expiry.Format(time.RFC3339), ":", ".", -1)
 	lbl[trustexpiry] = expiry
 	annotation[trustsignreport] = obj.SignedReport
 
@@ -218,25 +225,25 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf stri
 }
 
 func getPrefixFromConf(path string) (string, error) {
-        out, err := os.Open(path)
-        if err != nil {
-                Log.Errorf("Error: %s %v", path, err)
-                return "", err
-        }
+	out, err := os.Open(path)
+	if err != nil {
+		Log.Errorf("Error: %s %v", path, err)
+		return "", err
+	}
 
-        defer out.Close()
-        readBytes := make([]byte, MAX_BYTES_LEN)
-        n, err := out.Read(readBytes)
-        if err != nil {
-                return "", err
-        }
-        s := Config{}
-        err = json.Unmarshal(readBytes[:n], &s)
-        if err != nil {
-                Log.Errorf("Error:  %v", err)
-                return "", err
-        }
-        return s.Trusted, nil
+	defer out.Close()
+	readBytes := make([]byte, MAX_BYTES_LEN)
+	n, err := out.Read(readBytes)
+	if err != nil {
+		return "", err
+	}
+	s := Config{}
+	err = json.Unmarshal(readBytes[:n], &s)
+	if err != nil {
+		Log.Errorf("Error:  %v", err)
+		return "", err
+	}
+	return s.Trusted, nil
 }
 
 //AddHostAttributesTabObj Handler for addition event of the HA CRD
@@ -247,7 +254,7 @@ func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabel
 		nodeName := haobj.Spec.HostList[index].Hostname
 		node, err := helper.GetNode(cli, nodeName)
 		if err != nil {
-			Log.Info("Failed to get node within cluster: %s", err.Error())
+			Log.Infof("Failed to get node within cluster: %s", err.Error())
 			continue
 		}
 		lbl, ann, err := GetHaObjLabel(ele, node, trustedPrefixConf)
@@ -261,19 +268,19 @@ func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabel
 			if !ele.Trusted {
 				// Taint the node with no execute
 				if err = helper.AddTaint(node, "untrusted", "true", "NoExecute"); err != nil {
-					Log.Error("Unable to add taints: %s", err.Error())
+					Log.Errorf("Unable to add taints: %s", err.Error())
 				}
 			} else {
 				//Remove Taint from node with no execute
 				if err = helper.DeleteTaint(node, "untrusted", "true", "NoExecute"); err != nil {
-					Log.Error("Unable to delete taints: %s", err.Error())
+					Log.Errorf("Unable to delete taints: %s", err.Error())
 				}
 			}
 		}
 
 		err = helper.UpdateNode(cli, node)
 		if err != nil {
-			Log.Info("can't update node: %s", err.Error())
+			Log.Infof("can't update node: %s", err.Error())
 		}
 		mutex.Unlock()
 	}
@@ -287,16 +294,16 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 		Log.Fatalf("Failed to create new clientset for Platform CRD %v", err)
 	}
 
-        listWatch := &cache.ListWatch{
-                ListFunc: func(options metav1.ListOptions) (runtime2.Object, error) {
-                        // list all of the host attributes in the default namespace
-                        return hacrdclient.HostAttributesCrds(metav1.NamespaceDefault).List(options)
-                },
-                WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-                        // watch all of the host attributes in the default namespace
-                        return hacrdclient.HostAttributesCrds(metav1.NamespaceDefault).Watch(options)
-                },
-        }
+	listWatch := &cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime2.Object, error) {
+			// list all of the host attributes in the default namespace
+			return hacrdclient.HostAttributesCrds(metav1.NamespaceDefault).List(options)
+		},
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			// watch all of the host attributes in the default namespace
+			return hacrdclient.HostAttributesCrds(metav1.NamespaceDefault).Watch(options)
+		},
+	}
 
 	//Create a PL CRD Helper object
 	hInf, cli := crdLabelAnnotate.Getk8sClientHelper(config)
@@ -331,5 +338,3 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 		},
 	}, cache.Indexers{})
 }
-
-

@@ -7,47 +7,52 @@ package crdController
 
 import (
 	trust_schema "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
-	"testing"
 	corev1 "k8s.io/api/core/v1"
+	"os"
+	"reflect"
+	"testing"
 )
 
-func TestGetPLCrdDef(t *testing.T) {
-	expecPlCrd := CrdDefinition{
-		Plural:   "hostattributescrds",
-		Singular: "hostattributecrd",
+func TestGetPlCrdDef(t *testing.T) {
+	expectPlCrd := CrdDefinition{
+		Plural:   "hostattributes",
+		Singular: "hostattribute",
 		Group:    "crd.isecl.intel.com",
 		Kind:     "HostAttributeCrd",
 	}
 	recvPlCrd := GetHACrdDef()
-	if expecPlCrd != recvPlCrd {
-		t.Fatalf("Changes found in HA CRD Definition ")
-		t.Fatalf("Expected :%v however Received: %v ", expecPlCrd, recvPlCrd)
+	if reflect.DeepEqual(expectPlCrd, recvPlCrd) {
+		t.Errorf("Expected :%v however Received: %v ", expectPlCrd, recvPlCrd)
 	}
 	t.Logf("Test GetPLCrd Def success")
 }
 
 func TestGetPlObjLabel(t *testing.T) {
-	trustObj := trust_schema.HostList{
+	trustObj := trust_schema.Host{
 		Hostname:     "Node123",
-		Trusted:      "true",
+		Trusted:      true,
 		Expiry:       "12-23-45T123.91.12",
 		SignedReport: "495270d6242e2c67e24e22bad49dgdah",
-		Assettag: map[string]string{
-			"country.us":  "true",
-			"country.uk":  "true",
-			"state.ca":    "true",
-			"city.seatle": "true",
+		AssetTag: map[string]string{
+			"country.us":   "true",
+			"country.uk":   "true",
+			"state.ca":     "true",
+			"city.seattle": "true",
 		},
 	}
+
 	node := &corev1.Node{}
-	path := "/opt/isecl-k8s-extensions/bin/tag_prefix.conf"
-	recvlabel, recannotate := GetHaObjLabel(trustObj, node, path)
-	if _, ok := recvlabel[getPrefixFromConf(path)+"trusted"]; ok {
+
+	tagConfPath := "../tag-prefix-config/tag_prefix.conf"
+	t.Log(os.Getwd())
+	recvlabel, recannotate, _ := GetHaObjLabel(trustObj, node, tagConfPath)
+	prefix, _ := getPrefixFromConf(tagConfPath)
+	if _, ok := recvlabel[prefix+"trusted"]; ok {
 		t.Logf("Found in HA label Trusted field")
 	} else {
 		t.Fatalf("Could not get label trusted from HA Report")
 	}
-	if _, ok := recvlabel["country.us"]; ok {
+	if _, ok := recvlabel[prefix+"country.us"]; ok {
 		t.Logf("Found HA label in AssetTag report")
 	} else {
 		t.Fatalf("Could not get required label from HA Report")

@@ -10,8 +10,8 @@ import (
 	"intel/isecl/k8s-custom-controller/v3/crdController"
 	"intel/isecl/k8s-custom-controller/v3/util"
 	"os"
-	"sync"
 	"strconv"
+	"sync"
 
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
@@ -25,15 +25,16 @@ func GetClientConfig(kubeconfig string) (*rest.Config, error) {
 }
 
 var Log = util.GetLogger()
+
 const TrustedPrefixConf = "/opt/isecl-k8s-extensions/config/tag_prefix.conf"
 
 func main() {
 
 	Log.Infof("Starting ISecL Custom Controller")
 
-        logLevel := os.Getenv("LOG_LEVEL")
+	logLevel := os.Getenv("LOG_LEVEL")
 
-        util.SetLogger(logLevel)
+	util.SetLogger(logLevel)
 
 	skipCrdCreate, err := strconv.ParseBool(os.Getenv("SKIP_CRD_CREATE"))
 	if err != nil {
@@ -48,7 +49,7 @@ func main() {
 		taintUntrustedNodes = false
 	}
 	Log.Infof("TAINT_UNTRUSTED_NODES is set to %v", taintUntrustedNodes)
-	
+
 	kubeConf := flag.String("kubeconf", "", "Path to a kube config. ")
 	flag.Parse()
 
@@ -67,19 +68,19 @@ func main() {
 	//Create mutex to sync operation between the two CRD threads
 	var crdmutex = &sync.Mutex{}
 
-        if !skipCrdCreate {
-                CrdDef := crdController.GetHACrdDef()
-                //crdController.NewIseclCustomResourceDefinition to create CRD
-                err = crdController.NewIseclCustomResourceDefinition(cs, &CrdDef)
-                if err != nil {
-                        Log.Errorf("Error in creating hostattributes CRD %v", err)
-                        return
-                }
-        }
+	if !skipCrdCreate {
+		CrdDef := crdController.GetHACrdDef()
+		//crdController.NewIseclCustomResourceDefinition to create CRD
+		err = crdController.NewIseclCustomResourceDefinition(cs, &CrdDef)
+		if err != nil {
+			Log.Errorf("Error in creating hostattributes CRD %v", err)
+			return
+		}
+	}
 
-        if taintUntrustedNodes {
-                crdController.TaintUntrustedNodes = true
-        }
+	if taintUntrustedNodes {
+		crdController.TaintUntrustedNodes = true
+	}
 	// Create a queue
 	queue := workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "iseclcontroller")
 
@@ -90,7 +91,7 @@ func main() {
 	defer close(stop)
 	go controller.Run(1, stop)
 
-	Log.Infof("Waiting for updates on  ISecl Custom Resource Definitions")
+	Log.Infof("Waiting for updates on ISecl Custom Resource Definitions")
 
 	// Wait forever
 	select {}
