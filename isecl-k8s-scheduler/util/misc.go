@@ -24,11 +24,12 @@ var Log *logrus.Logger
 func GetLogger() *logrus.Logger {
 	Log = logrus.New()
 	logFile, err := os.OpenFile(LogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-	if err != nil {
-		Log.Fatal(err)
+	if err == nil {
+		Log.SetOutput(logFile)
+	} else {
+		Log.SetOutput(os.Stdout)
 	}
 	Log.Formatter = &logrus.JSONFormatter{}
-	Log.SetOutput(logFile)
 	Log.Info("Initialized log")
 	return Log
 }

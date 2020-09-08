@@ -120,7 +120,7 @@ func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement,
 
 	verify, iseclLabelsExists := ValidatePodWithAnnotation(node, claims, trustPrefix)
 	if verify {
-		Log.Infoln("Node label validated against node annotations succesful")
+		Log.Infoln("Node label validated against node annotations successful")
 	} else {
 		Log.Infoln("Node Label did not match node annotation ")
 		return false

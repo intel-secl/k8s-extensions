@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	ahreport string = "assetTags"
-	trusted  string = "trusted"
+	ahreport   string = "assetTags"
+	trusted    string = "trusted"
+	hwFeatures string = "hardwareFeatures"
 )
 
 func keyExists(decoded map[string]interface{}, key string) bool {
@@ -29,15 +30,24 @@ func keyExists(decoded map[string]interface{}, key string) bool {
 func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string) (bool, bool) {
 	iseclLabelExists := false
 	assetClaims := make(map[string]interface{})
+	hardwareFeatureClaims := make(map[string]interface{})
+
 	if keyExists(claims, ahreport) {
 		assetClaims = claims[ahreport].(map[string]interface{})
-		Log.Infof("ValidatePodWithAnnotation - Validating node: %v, claims: %v", nodeData, assetClaims)
+		Log.Infof("ValidatePodWithAnnotation - Validating Asset Tag Claims node: %v, claims: %v", nodeData, assetClaims)
+	}
+
+	if keyExists(claims, hwFeatures) {
+		hardwareFeatureClaims = claims[hwFeatures].(map[string]interface{})
+		Log.Infof("ValidatePodWithAnnotation - Validating Hardware Feature Claims node: %v, claims: %v", nodeData, hardwareFeatureClaims)
 	}
 
 	for _, val := range nodeData {
 		if strings.Contains(val.Key, trustprefix) {
 			iseclLabelExists = true
+			val.Key = strings.Split(val.Key, trustprefix)[1]
 		}
+
 		// if val is trusted, it can be directly found in claims
 		if sigVal, ok := claims[trusted]; ok {
 			tr := trustprefix + trusted
@@ -62,30 +72,39 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 					}
 				}
 			}
-		} else {
-			if geoKey, ok := assetClaims[val.Key]; ok {
-				assetTagList, ok := geoKey.([]interface{})
-				if ok {
-					flag := false
-					//Taking only first value from asset tag list assuming only one value will be there
-					geoVal := assetTagList[0]
-					newVal := geoVal.(string)
-					newVal = strings.Replace(newVal, " ", "", -1)
-					newVal = trustprefix + newVal
-					for _, match := range val.Values {
-						if match == newVal {
-							flag = true
-						} else {
-							Log.Infof("ValidatePodWithAnnotation - Geo Asset Tags - Mismatch in %v field. Actual: %v | In Signature: %v ", geoKey, match, newVal)
-						}
-					}
-					if flag {
-						continue
+
+			// validate asset tags
+			if aTagVal, ok := assetClaims[val.Key]; ok {
+				flag := false
+				for _, match := range val.Values {
+					if match == aTagVal {
+						flag = true
 					} else {
-						return false, iseclLabelExists
+						Log.Infof("ValidatePodWithAnnotation - Asset Tags - Mismatch in %v field. Actual: %v", val.Key, aTagVal, match)
 					}
 				}
+				if flag {
+					continue
+				} else {
+					return false, iseclLabelExists
+				}
+			}
 
+			// validate HW features
+			if hwKey, ok := hardwareFeatureClaims[val.Key]; ok {
+				flag := false
+				for _, match := range val.Values {
+					if match == hwKey {
+						flag = true
+					} else {
+						Log.Infof("ValidatePodWithAnnotation - Hardware Features - Mismatch in %v field. Actual: %v", val.Key, hwKey, match)
+					}
+				}
+				if flag {
+					continue
+				} else {
+					return false, iseclLabelExists
+				}
 			}
 		}
 	}

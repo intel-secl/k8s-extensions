@@ -28,6 +28,8 @@ spec:
                   items:
                     type: object
                     properties:
+                      updatedTime:
+                        type: string
                       hostName:
                         type: string
                       trusted:
@@ -37,6 +39,10 @@ spec:
                       validTo:
                         type: string
                       assetTags:
+                        type: object
+                        additionalProperties:
+                          type: string
+                      hardwareFeatures:
                         type: object
                         additionalProperties:
                           type: string
@@ -51,5 +57,5 @@ spec:
     kind: HostAttributesCrd
     # shortNames allow shorter string to match your resource on the CLI
     shortNames:
-    - ha
+      - ha
 

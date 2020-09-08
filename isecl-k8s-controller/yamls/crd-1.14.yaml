@@ -40,6 +40,10 @@ spec:
                         type: object
                         additionalProperties:
                           type: string
+                      hardwareFeatures:
+                        type: object
+                        additionalProperties:
+                          type: string
   # either Namespaced or Cluster
   scope: Namespaced
   names:

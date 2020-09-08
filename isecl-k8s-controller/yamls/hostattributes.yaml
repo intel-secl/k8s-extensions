@@ -14,3 +14,4 @@ spec:
       signedTrustReport: "some trust report"
       validTo: "someDate"
       assetTags: {}
+      hardwareFeatures: {}

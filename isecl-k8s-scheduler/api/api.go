@@ -22,13 +22,20 @@ var Log = util.GetLogger()
 //FilterHandler is the filter host.
 func FilterHandler(w http.ResponseWriter, r *http.Request) {
 	var args schedulerapi.ExtenderArgs
+
+	if r.Body == nil || r.ContentLength == 0 {
+		Log.Errorf("Error: Empty request body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	data, _ := ioutil.ReadAll(r.Body)
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields()
 
 	err := dec.Decode(&args)
 	if err != nil {
-		Log.Errorf("Error marshaling json data: %v", err)
+		Log.Errorf("Error marshalling json data: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -48,7 +55,7 @@ func FilterHandler(w http.ResponseWriter, r *http.Request) {
 		Log.Errorf("Error while json marshalling of response %v", err)
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	bytes.NewBuffer(resultBytes).WriteTo(w)
 	return

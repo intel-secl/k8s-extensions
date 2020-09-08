@@ -27,7 +27,7 @@ import (
 )
 
 type Config struct {
-	Trusted string `"json":"trusted"`
+	Trusted string `json:"trusted"`
 }
 
 const TrustedPrefixConf = "/opt/isecl-k8s-extensions/config/"
@@ -125,7 +125,7 @@ func main() {
 
 	router := mux.NewRouter()
 
-	//hadler for the post operation
+	//handler for the post operation
 	router.HandleFunc("/filter", api.FilterHandler).Methods("POST")
 	router.HandleFunc("/", extendedScheduler).Methods("GET")
 

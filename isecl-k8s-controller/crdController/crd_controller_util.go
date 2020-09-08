@@ -6,8 +6,8 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdController
 
 import (
-	"time"
 	"intel/isecl/k8s-custom-controller/v3/util"
+	"time"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	clientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -57,7 +57,7 @@ func NewIseclCustomResourceDefinition(cs clientset.Interface, crdDef *CrdDefinit
 		}
 	}
 
-	Log.Infof("Sucessfully created CRD : %#v \n", crd.Name)
+	Log.Infof("Successfully created CRD : %#v \n", crd.Name)
 	return err
 }
 
