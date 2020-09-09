@@ -43,14 +43,14 @@ spec:
                       # SKC Attributes
                       sgx-enabled:
                         type: string
-                        sgx-supported:
-                          type: string
-                        TCBUpToDate:
-                          type: string
-                        EPCSize:
-                          type: string
-                        FLCEnabled:
-                          type: string
+                      sgx-supported:
+                        type: string
+                      tcbUpToDate:
+                        type: string
+                      epc-size:
+                        type: string
+                      flc-enabled:
+                        type: string
   # either Namespaced or Cluster
   scope: Namespaced
   names:
