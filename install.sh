@@ -17,24 +17,13 @@ then
   mv cfssljson_linux-amd64 /usr/local/bin/cfssljson
 fi
 
-# Java configurations
-JAVA_CMD=$(type -p java | xargs readlink -f)
-JAVA_HOME=$(dirname $JAVA_CMD | xargs dirname | xargs dirname)
-
 K8S_EXTENSIONS_DIR=/opt/isecl-k8s-extensions
 CERTS=certificate-generation-scripts
-ATTESTATION_HUB_KEYSTORES=/opt/isecl-k8s-extensions/attestation-hub-keystores
 K8S_EXTENSIONS_CONFIG_DIR=$K8S_EXTENSIONS_DIR/config
 K8S_EXTENSIONS_LOG_DIR=/var/log/isecl-k8s-extensions
 TAG_PREFIX_CONF=tag_prefix.conf
 K8S_EXTENSIONS_SCHEDULER_DIR=$K8S_EXTENSIONS_DIR/isecl-k8s-scheduler
 K8S_EXTENSIONS_SCHEDULER_CONFIG_DIR=${K8S_EXTENSIONS_SCHEDULER_DIR}/config
-
-
-if [ -f "${JAVA_HOME}/jre/lib/security/java.security" ]; then
-  echo "Setting default keystore to pkcs12"
-  sed -i -e 's/keystore\.type.*/keystore\.type=pkcs12/' "${JAVA_HOME}/jre/lib/security/java.security" 2>/dev/null
-fi
 
 mkdir -p $K8S_EXTENSIONS_DIR
 mkdir -p $K8S_EXTENSIONS_CONFIG_DIR
@@ -87,9 +76,6 @@ cp -r yamls $K8S_EXTENSIONS_DIR/
 echo ""
 echo "Installing Pre requisites for generating certificates"
 echo ""
-
-chmod +x create_certs.sh
-./create_certs.sh
 
 if [ $? -ne 0 ]
 then
