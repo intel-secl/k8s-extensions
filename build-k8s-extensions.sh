@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TAG=$(git describe --tags --abbrev=0 2> /dev/null)
+TAG=$(git tag --points-at HEAD | tail -1 2> /dev/null)
 
 CURR_DIR=`pwd`
 echo "Building isecl-k8s-controller"
