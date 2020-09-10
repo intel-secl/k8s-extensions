@@ -48,7 +48,7 @@ func NewIseclCustomResourceDefinition(cs clientset.Interface, crdDef *CrdDefinit
 	}
 	_, err := cs.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
 	if err != nil && apierrors.IsAlreadyExists(err) {
-		Log.Infof("ISECL HostAttributes CRD object allready exisists")
+		Log.Infof("ISECL HostAttributes CRD object already exists")
 		return nil
 	} else {
 		if err := waitForEstablishedCRD(cs, crd.Name); err != nil {
