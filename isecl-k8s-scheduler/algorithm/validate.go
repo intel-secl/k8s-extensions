@@ -7,7 +7,6 @@ package algorithm
 
 import (
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -32,12 +31,12 @@ func keyExists(decoded map[string]interface{}, key string) bool {
 
 //ValidatePodWithAnnotation is to validate signed trusted and location report with pod keys and values
 func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string) bool {
+
 	assetClaims := make(map[string]interface{})
 	if keyExists(claims, ahreport) {
 		assetClaims = claims[ahreport].(map[string]interface{})
 		Log.Infof("ValidatePodWithAnnotation - Validating node: %v, claims: %v", nodeData, assetClaims)
 	}
-
 	for _, val := range nodeData {
 		// if val is trusted, it can be directly found in claims
 		switch val.Key {
@@ -45,9 +44,8 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 			sigVal := claims[sgxEnabled]
 			for _, nodeVal := range val.Values {
 
-				sigValTemp := sigVal.(bool)
-				sigVal := strconv.FormatBool(sigValTemp)
-				if nodeVal == sigVal {
+				sigValStr := sigVal.(string)
+				if nodeVal == sigValStr {
 					continue
 				} else {
 					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
@@ -58,9 +56,8 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 			sigVal := claims[sgxSupported]
 			for _, nodeVal := range val.Values {
 
-				sigValTemp := sigVal.(bool)
-				sigVal := strconv.FormatBool(sigValTemp)
-				if nodeVal == sigVal {
+				sigValStr := sigVal.(string)
+				if nodeVal == sigValStr {
 					continue
 				} else {
 					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
@@ -71,9 +68,8 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 			sigVal := claims[tcbUpToDate]
 			for _, nodeVal := range val.Values {
 
-				sigValTemp := sigVal.(bool)
-				sigVal := strconv.FormatBool(sigValTemp)
-				if nodeVal == sigVal {
+				sigValStr := sigVal.(string)
+				if nodeVal == sigValStr {
 					continue
 				} else {
 					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
@@ -84,8 +80,8 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 			sigVal := claims[epcSize]
 			for _, nodeVal := range val.Values {
 
-				sigValTemp := sigVal.(string)
-				if nodeVal == sigValTemp {
+				sigValStr := sigVal.(string)
+				if nodeVal == sigValStr {
 					continue
 				} else {
 					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
@@ -96,9 +92,8 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 			sigVal := claims[flcEnabled]
 			for _, nodeVal := range val.Values {
 
-				sigValTemp := sigVal.(bool)
-				sigVal := strconv.FormatBool(sigValTemp)
-				if nodeVal == sigVal {
+				sigValStr := sigVal.(string)
+				if nodeVal == sigValStr {
 					continue
 				} else {
 					Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
