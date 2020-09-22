@@ -7,6 +7,7 @@ package v1beta1
 
 import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+        "time"
 )
 
 const (
@@ -29,7 +30,7 @@ type HostAttributesCrd struct {
 type Host struct {
 	Hostname     string            `json:"hostName"`
 	Trusted      bool              `json:"trusted,omitempty"`
-	Expiry       string            `json:"validTo,omitempty"`
+	Expiry       time.Time         `json:"validTo,omitempty"`
 	SignedReport string            `json:"signedTrustReport"`
 	Assettag     map[string]string `json:"assetTags,omitempty"`
 	SgxEnabled   string            `json:"sgx-enabled,omitempty"`

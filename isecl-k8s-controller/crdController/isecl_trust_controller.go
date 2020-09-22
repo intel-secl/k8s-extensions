@@ -209,6 +209,9 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf stri
 		lbl[epcMemory] = obj.EPCSize
 	}
 
+	expiry := strings.Replace(obj.Expiry.Format(time.RFC3339), ":", ".", -1)
+	lbl[trustexpiry] = expiry
+
 	return lbl, annotation, nil
 }
 
