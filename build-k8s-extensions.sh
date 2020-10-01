@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TAG=$(git describe --tags --abbrev=0 2> /dev/null)
+TAG=3.1
 
 CURR_DIR=`pwd`
 echo "Building isecl-k8s-controller"
