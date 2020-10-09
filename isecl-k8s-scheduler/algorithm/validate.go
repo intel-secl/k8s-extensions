@@ -34,12 +34,12 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 
 	if keyExists(claims, ahreport) {
 		assetClaims = claims[ahreport].(map[string]interface{})
-		Log.Infof("ValidatePodWithAnnotation - Validating Asset Tag Claims node: %v, claims: %v", nodeData, assetClaims)
+		defaultLog.Infof("ValidatePodWithAnnotation - Validating Asset Tag Claims node: %v, claims: %v", nodeData, assetClaims)
 	}
 
 	if keyExists(claims, hwFeatures) {
 		hardwareFeatureClaims = claims[hwFeatures].(map[string]interface{})
-		Log.Infof("ValidatePodWithAnnotation - Validating Hardware Feature Claims node: %v, claims: %v", nodeData, hardwareFeatureClaims)
+		defaultLog.Infof("ValidatePodWithAnnotation - Validating Hardware Feature Claims node: %v, claims: %v", nodeData, hardwareFeatureClaims)
 	}
 
 	for _, val := range nodeData {
@@ -59,14 +59,14 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 						if nodeVal == sigVal {
 							continue
 						} else {
-							Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+							defaultLog.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
 							return false, iseclLabelExists
 						}
 					} else {
 						if nodeVal == sigVal {
 							continue
 						} else {
-							Log.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+							defaultLog.Infof("ValidatePodWithAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
 							return false, iseclLabelExists
 						}
 					}
@@ -80,7 +80,7 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 					if match == aTagVal {
 						flag = true
 					} else {
-						Log.Infof("ValidatePodWithAnnotation - Asset Tags - Mismatch in %v field. Actual: %v", val.Key, aTagVal, match)
+						defaultLog.Infof("ValidatePodWithAnnotation - Asset Tags - Mismatch in %v field. Actual: %v", val.Key, aTagVal, match)
 					}
 				}
 				if flag {
@@ -97,7 +97,7 @@ func ValidatePodWithAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt
 					if match == hwKey {
 						flag = true
 					} else {
-						Log.Infof("ValidatePodWithAnnotation - Hardware Features - Mismatch in %v field. Actual: %v", val.Key, hwKey, match)
+						defaultLog.Infof("ValidatePodWithAnnotation - Hardware Features - Mismatch in %v field. Actual: %v", val.Key, hwKey, match)
 					}
 				}
 				if flag {
@@ -117,25 +117,25 @@ func ValidateNodeByTime(claims jwt.MapClaims) int {
 	if timeVal, ok := claims["validTo"].(string); ok {
 
 		reg, err := regexp.Compile("[0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+")
-		Log.Debugf("ValidateNodeByTime reg %v", reg)
+		defaultLog.Debugf("ValidateNodeByTime reg %v", reg)
 		if err != nil {
-			Log.Errorf("Error parsing validTo time: %v", err)
+			defaultLog.Errorf("Error parsing validTo time: %v", err)
 			return trustedTimeFlag
 		}
 		newstr := reg.ReplaceAllString(timeVal, "")
-		Log.Debugf("ValidateNodeByTime newstr: %s", newstr)
+		defaultLog.Debugf("ValidateNodeByTime newstr: %s", newstr)
 		trustedValidToTime := strings.Replace(timeVal, newstr, "", -1)
-		Log.Infof("ValidateNodeByTime trustedValidToTime: %s", trustedValidToTime)
+		defaultLog.Infof("ValidateNodeByTime trustedValidToTime: %s", trustedValidToTime)
 
 		t := time.Now().UTC()
 		timeDiff := strings.Compare(trustedValidToTime, t.Format(time.RFC3339))
-		Log.Infof("ValidateNodeByTime - ValidTo - %s |  current - %s | Diff - %d", trustedValidToTime, timeVal, timeDiff)
+		defaultLog.Infof("ValidateNodeByTime - ValidTo - %s |  current - %s | Diff - %d", trustedValidToTime, timeVal, timeDiff)
 		if timeDiff >= 0 {
-			Log.Infof("ValidateNodeByTime -timeDiff: %d ", timeDiff)
+			defaultLog.Infof("ValidateNodeByTime -timeDiff: %d ", timeDiff)
 			trustedTimeFlag = 1
-			Log.Infof("ValidateNodeByTime -trustedTimeFlag: %d", trustedTimeFlag)
+			defaultLog.Infof("ValidateNodeByTime -trustedTimeFlag: %d", trustedTimeFlag)
 		} else {
-			Log.Infof("ValidateNodeByTime - Node outside expiry time - ValidTo - %s |  current - %s", timeVal, t)
+			defaultLog.Infof("ValidateNodeByTime - Node outside expiry time - ValidTo - %s |  current - %s", timeVal, t)
 		}
 
 	}

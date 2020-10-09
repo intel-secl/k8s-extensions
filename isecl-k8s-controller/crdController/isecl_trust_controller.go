@@ -6,14 +6,12 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdController
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"intel/isecl/k8s-custom-controller/v3/crdLabelAnnotate"
+	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
 	ha_schema "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
 	ha_client "intel/isecl/k8s-custom-controller/v3/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -45,6 +43,7 @@ type IseclHAController struct {
 type Config struct {
 	Trusted string `json:"trusted"`
 }
+var defaultLog = commLog.GetDefaultLogger()
 
 func NewIseclHAController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller) *IseclHAController {
 	return &IseclHAController{
@@ -87,27 +86,27 @@ func (c *IseclHAController) processNextItem() bool {
 
 //processPLQueue : can be extended to validate the crd objects are been acted upon
 func (c *IseclHAController) processPLQueue(key string) error {
-	Log.Infof("processPLQueue for Key %#v ", key)
+	defaultLog.Infof("processPLQueue for Key %#v ", key)
 	return nil
 }
 
-// syncFromQueue is the business logic of the controller. In this controller it simply prints
+// syncFromQueue is the business defaultLogic of the controller. In this controller it simply prints
 // information about the CRD to stdout. In case an error happened, it has to simply return the error.
-// The retry logic should not be part of the business logic.
+// The retry defaultLogic should not be part of the business logic.
 func (c *IseclHAController) syncFromQueue(key string) error {
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
-		Log.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		defaultLog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
 	if !exists {
 		// Below we will warm up our cache with a CDR, so that we will see a delete for one CRD
-		Log.Infof("PL CRD object %s does not exist anymore\n", key)
+		defaultLog.Infof("PL CRD object %s does not exist anymore\n", key)
 	} else {
 		// Note that you also have to check the uid if you have a local controlled resource, which
 		// is dependent on the actual instance, to detect that a CRD object was recreated with the same name
-		Log.Infof("Sync/Add/Update for PL CRD Object %#v ", obj)
+		defaultLog.Infof("Sync/Add/Update for PL CRD Object %#v ", obj)
 		c.processPLQueue(key)
 	}
 	return nil
@@ -125,7 +124,7 @@ func (c *IseclHAController) handleErr(err error, key interface{}) {
 
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	if c.queue.NumRequeues(key) < 5 {
-		Log.Infof("Error syncing CRD %v: %v", key, err)
+		defaultLog.Infof("Error syncing CRD %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
@@ -136,7 +135,7 @@ func (c *IseclHAController) handleErr(err error, key interface{}) {
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	Log.Infof("Dropping CRD %q out of the queue: %v", key, err)
+	defaultLog.Infof("Dropping CRD %q out of the queue: %v", key, err)
 }
 
 func (c *IseclHAController) Run(threadiness int, stopCh chan struct{}) {
@@ -144,7 +143,7 @@ func (c *IseclHAController) Run(threadiness int, stopCh chan struct{}) {
 
 	// Let the workers stop when we are done
 	defer c.queue.ShutDown()
-	Log.Info("Starting ISeclHAController")
+	defaultLog.Info("Starting ISeclHAController")
 
 	go c.informer.Run(stopCh)
 
@@ -159,7 +158,7 @@ func (c *IseclHAController) Run(threadiness int, stopCh chan struct{}) {
 	}
 
 	<-stopCh
-	Log.Info("Stopping Platform controller")
+	defaultLog.Info("Stopping Platform controller")
 }
 
 func (c *IseclHAController) runWorker() {
@@ -168,53 +167,44 @@ func (c *IseclHAController) runWorker() {
 }
 
 //GetHaObjLabel creates labels and annotations map based on HA CRD
-func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf string) (crdLabelAnnotate.Labels, crdLabelAnnotate.Annotations, error) {
+func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, tagPrefix string) (crdLabelAnnotate.Labels, crdLabelAnnotate.Annotations, error) {
 	assetTagSize := len(obj.AssetTag)
 	hwFeaturesSize := len(obj.HardwareFeatures)
 
 	var lbl = make(crdLabelAnnotate.Labels, assetTagSize+hwFeaturesSize+2)
 	var annotation = make(crdLabelAnnotate.Annotations, 1)
 	trustPresent := false
-	trustLabelWithPrefix, err := getPrefixFromConf(trustedPrefixConf)
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if !trustLabelRegex.MatchString(trustLabelWithPrefix) {
-		return nil, nil, errors.New("Invalid string formatted input")
-	}
 
 	for key, val := range obj.AssetTag {
 		labelkey := strings.Replace(key, " ", ".", -1)
 		labelkey = strings.Replace(labelkey, ":", ".", -1)
-		labelkey = trustLabelWithPrefix + labelkey
+		labelkey = tagPrefix + labelkey
 		lbl[labelkey] = val
 	}
 
 	for key, val := range obj.HardwareFeatures {
 		labelkey := strings.Replace(key, " ", ".", -1)
 		labelkey = strings.Replace(labelkey, ":", ".", -1)
-		labelkey = trustLabelWithPrefix + labelkey
+		labelkey = tagPrefix + labelkey
 		lbl[labelkey] = val
 	}
 
-	trustLabelWithPrefix = trustLabelWithPrefix + trustlabel
+	trustLabelWithPrefix := tagPrefix + trustlabel
 
 	//Comparing with existing node labels
 	for key, value := range node.Labels {
 		if key == trustLabelWithPrefix {
 			trustPresent = true
 			if value == strconv.FormatBool(obj.Trusted) {
-				Log.Infof("No change in Trustlabel: %s", node.Name)
+				defaultLog.Infof("No change in Trustlabel: %s", node.Name)
 			} else {
-				Log.Infof("Updating complete Trustlabel for the node: %s", node.Name)
+				defaultLog.Infof("Updating complete Trustlabel for the node: %s", node.Name)
 				lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
 			}
 		}
 	}
 	if !trustPresent {
-		Log.Info("Trust value was not present on node adding for first time: %s", node.Name)
+		defaultLog.Info("Trust value was not present on node adding for first time: %s", node.Name)
 		lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
 	}
 	expiry := strings.Replace(obj.Expiry.Format(time.RFC3339), ":", ".", -1)
@@ -224,74 +214,51 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, trustedPrefixConf stri
 	return lbl, annotation, nil
 }
 
-func getPrefixFromConf(path string) (string, error) {
-	out, err := os.Open(path)
-	if err != nil {
-		Log.Errorf("Error: %s %v", path, err)
-		return "", err
-	}
-
-	defer out.Close()
-	readBytes := make([]byte, MAX_BYTES_LEN)
-	n, err := out.Read(readBytes)
-	if err != nil {
-		return "", err
-	}
-	s := Config{}
-	err = json.Unmarshal(readBytes[:n], &s)
-	if err != nil {
-		Log.Errorf("Error:  %v", err)
-		return "", err
-	}
-	return s.Trusted, nil
-}
-
 //AddHostAttributesTabObj Handler for addition event of the HA CRD
-func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabelAnnotate.APIHelpers, cli *k8sclient.Clientset, mutex *sync.Mutex, trustedPrefixConf string) {
-	trustLabelWithPrefix, _ := getPrefixFromConf(trustedPrefixConf)
+func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabelAnnotate.APIHelpers, cli *k8sclient.Clientset, mutex *sync.Mutex, tagPrefix string) {
 
 	for index, ele := range haobj.Spec.HostList {
 		nodeName := haobj.Spec.HostList[index].Hostname
 		node, err := helper.GetNode(cli, nodeName)
 		if err != nil {
-			Log.Infof("Failed to get node within cluster: %s", err.Error())
+			defaultLog.Infof("Failed to get node within cluster: %s", err.Error())
 			continue
 		}
-		lbl, ann, err := GetHaObjLabel(ele, node, trustedPrefixConf)
+		lbl, ann, err := GetHaObjLabel(ele, node, tagPrefix)
 		if err != nil {
-			Log.Fatalf("Error: %v", err)
+			defaultLog.Fatalf("Error: %v", err)
 		}
 		mutex.Lock()
-		helper.AddLabelsAnnotations(node, lbl, ann, trustLabelWithPrefix)
+		helper.AddLabelsAnnotations(node, lbl, ann, tagPrefix)
 		// NoExec Taints on nodes enforced optionally
 		if TaintUntrustedNodes {
 			if !ele.Trusted {
 				// Taint the node with no execute
 				if err = helper.AddTaint(node, "untrusted", "true", "NoExecute"); err != nil {
-					Log.Errorf("Unable to add taints: %s", err.Error())
+					defaultLog.Errorf("Unable to add taints: %s", err.Error())
 				}
 			} else {
 				//Remove Taint from node with no execute
 				if err = helper.DeleteTaint(node, "untrusted", "true", "NoExecute"); err != nil {
-					Log.Errorf("Unable to delete taints: %s", err.Error())
+					defaultLog.Errorf("Unable to delete taints: %s", err.Error())
 				}
 			}
 		}
 
 		err = helper.UpdateNode(cli, node)
 		if err != nil {
-			Log.Infof("can't update node: %s", err.Error())
+			defaultLog.Infof("can't update node: %s", err.Error())
 		}
 		mutex.Unlock()
 	}
 }
 
 //NewIseclHAIndexerInformer returns informer for HA CRD object
-func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimitingInterface, crdMutex *sync.Mutex, trustedPrefixConf string) (cache.Indexer, cache.Controller) {
+func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimitingInterface, crdMutex *sync.Mutex, tagPrefix string) (cache.Indexer, cache.Controller) {
 	// Create a new clientset which include our CRD schema
 	hacrdclient, err := ha_client.NewForConfig(config)
 	if err != nil {
-		Log.Fatalf("Failed to create new clientset for Platform CRD %v", err)
+		defaultLog.Fatalf("Failed to create new clientset for Platform CRD %v", err)
 	}
 
 	listWatch := &cache.ListWatch{
@@ -311,27 +278,27 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 	return cache.NewIndexerInformer(listWatch, &ha_schema.HostAttributesCrd{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
-			Log.Info("Received Add event for ", key)
+			defaultLog.Info("Received Add event for ", key)
 			haobj := obj.(*ha_schema.HostAttributesCrd)
 			if err == nil {
 				queue.Add(key)
 			}
-			AddHostAttributesTabObj(haobj, hInf, cli, crdMutex, trustedPrefixConf)
+			AddHostAttributesTabObj(haobj, hInf, cli, crdMutex, tagPrefix)
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
-			Log.Info("Received Update event for ", key)
+			defaultLog.Info("Received Update event for ", key)
 			haobj := new.(*ha_schema.HostAttributesCrd)
 			if err == nil {
 				queue.Add(key)
 			}
-			AddHostAttributesTabObj(haobj, hInf, cli, crdMutex, trustedPrefixConf)
+			AddHostAttributesTabObj(haobj, hInf, cli, crdMutex, tagPrefix)
 		},
 		DeleteFunc: func(obj interface{}) {
 			// IndexerInformer uses a delta queue, therefore for deletes we have to use this
 			// key function.
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-			Log.Info("Received delete event for ", key)
+			defaultLog.Info("Received delete event for ", key)
 			if err == nil {
 				queue.Add(key)
 			}
