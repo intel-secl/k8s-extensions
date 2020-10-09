@@ -16,9 +16,7 @@ installer:
 	cp isecl-k8s-controller/out/docker-isecl-controller-$(VERSION).tar out/k8s-extensions/
 	cp -r isecl-k8s-controller/yamls/* out/k8s-extensions/yamls
 	cp -r isecl-k8s-scheduler/yamls/* out/k8s-extensions/yamls
-	cp install.sh out/k8s-extensions/
 	cp -r isecl-k8s-scheduler/config-files/*  out/k8s-extensions/
-	makeself out/k8s-extensions out/isecl-k8s-extensions-$(VERSION).bin "k8s extensions installer $(VERSION)" ./install.sh
 
 all: clean installer
 

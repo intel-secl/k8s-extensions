@@ -3,7 +3,7 @@
 # * SPDX-License-Identifier: BSD-3-Clause
 # */
 
-FROM registry.access.redhat.com/ubi8-init:8.1
+FROM centos:8
 
 RUN yum -y install curl
 

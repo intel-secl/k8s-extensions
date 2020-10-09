@@ -6,7 +6,6 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdController
 
 import (
-	"intel/isecl/k8s-custom-controller/v3/util"
 	"time"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -15,8 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
-
-var Log = util.GetLogger()
 
 const (
 	trustexpiry     = "TrustTagExpiry"
@@ -48,16 +45,16 @@ func NewIseclCustomResourceDefinition(cs clientset.Interface, crdDef *CrdDefinit
 	}
 	_, err := cs.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
 	if err != nil && apierrors.IsAlreadyExists(err) {
-		Log.Infof("ISECL HostAttributes CRD object already exists")
+		defaultLog.Infof("ISECL HostAttributes CRD object already exists")
 		return nil
 	} else {
 		if err := waitForEstablishedCRD(cs, crd.Name); err != nil {
-			Log.Errorf("Failed to establish CRD %v", err)
+			defaultLog.Errorf("Failed to establish CRD %v", err)
 			return err
 		}
 	}
 
-	Log.Infof("Successfully created CRD : %#v \n", crd.Name)
+	defaultLog.Infof("Successfully created CRD : %#v \n", crd.Name)
 	return err
 }
 
@@ -76,7 +73,7 @@ func waitForEstablishedCRD(client clientset.Interface, name string) error {
 				}
 			case apiextensionsv1beta1.NamesAccepted:
 				if cond.Status == apiextensionsv1beta1.ConditionFalse {
-					Log.Infof("Name conflict: %v\n", cond.Reason)
+					defaultLog.Infof("Name conflict: %v\n", cond.Reason)
 				}
 			}
 		}

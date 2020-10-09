@@ -1,8 +1,0 @@
-{
-        "Url" : "127.0.0.1",
-        "Port" : 8888,
-        "ServerCert" : "/opt/isecl-k8s-extensions/isecl-k8s-scheduler/config/server.crt",
-        "ServerKey" : "/opt/isecl-k8s-extensions/isecl-k8s-scheduler/config/server.key",
-        "AttestationHubKey" : "/opt/isecl-k8s-extensions/isecl-k8s-scheduler/config/ihub_public_key.pem"
-}
-
