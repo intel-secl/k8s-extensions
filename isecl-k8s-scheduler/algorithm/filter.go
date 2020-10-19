@@ -16,7 +16,7 @@ import (
 var defaultLog = commLog.GetDefaultLogger()
 
 //FilteredHost is used for getting the nodes and pod details and verify and return if pod key matches with annotations
-func FilteredHost(args *schedulerapi.ExtenderArgs, tagPrefix, ihubKeyPath string) (*schedulerapi.ExtenderFilterResult, error) {
+func FilteredHost(args *schedulerapi.ExtenderArgs, iHubPubKey []byte, tagPrefix string) (*schedulerapi.ExtenderFilterResult, error) {
 	result := []v1.Node{}
 	failedNodesMap := schedulerapi.FailedNodesMap{}
 
@@ -34,7 +34,7 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, tagPrefix, ihubKeyPath string
 					for _, nodeSelector := range nodeSelectorData {
 						//match the data from the pod node selector tag to the node annotation
 						defaultLog.Infof("Checking annotation for node %v", node)
-						if CheckAnnotationAttrib(cipherVal, nodeSelector.MatchExpressions, tagPrefix, ihubKeyPath) {
+						if CheckAnnotationAttrib(cipherVal, nodeSelector.MatchExpressions, iHubPubKey, tagPrefix) {
 							result = append(result, node)
 						} else {
 							failedNodesMap[node.Name] = fmt.Sprintf("Annotation validation failed in extended-scheduler")

@@ -39,7 +39,6 @@ subjects:
   namespace: isecl
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -58,6 +57,19 @@ spec:
         app: isecl-controller
       name: isecl-controller
     spec:
+      securityContext:
+        fsGroup: 1001
+      initContainers:
+        - image: busybox:latest
+          name: chmod-pg-data
+          command:
+            - /bin/chown
+            - -R
+            - "1001"
+            - /var/log/isecl-k8s-extensions
+          volumeMounts:
+            - name: controller-log
+              mountPath: /var/log/isecl-k8s-extensions
       tolerations:
         - key: node-role.kubernetes.io/master
           operator: Exists
@@ -74,6 +86,9 @@ spec:
         - name: isecl-controller
           image: isecl/k8s-controller
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
           env:
             - name: SKIP_CRD_CREATE
               value: "true"
@@ -81,15 +96,13 @@ spec:
               value: "false"
             - name: LOG_LEVEL
               value: "INFO"
+            - name: TAG_PREFIX
+              value: "isecl."
           volumeMounts:
           - mountPath: /var/log/isecl-k8s-extensions
             name: controller-log
-          - mountPath: /opt/isecl-k8s-extensions/config
-            name: controller-config
       volumes:
         - hostPath:
             path: /var/log/isecl-k8s-extensions
+            type: DirectoryOrCreate
           name: controller-log
-        - hostPath:
-            path: /opt/isecl-k8s-extensions/config
-          name: controller-config
