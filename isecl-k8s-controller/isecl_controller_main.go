@@ -52,25 +52,30 @@ func main() {
 	fmt.Println("Starting ISecL Custom Controller")
 
 	logLevel := os.Getenv("LOG_LEVEL")
+	if logLevel == "" {
+                fmt.Printf("LOG_LEVEL cannot be empty setting to default value INFO")
+                logLevel="INFO"
+        }
+
 	logMaxLength, err := strconv.Atoi(os.Getenv("LOG_MAX_LENGTH"))
 	if err != nil {
-		fmt.Printf("Error while parsing variable config LOG_MAX_LENGTH error: %v, setting LOG_MAX_LENGTH to 1500, %v", err)
+		fmt.Printf("Error while parsing variable config LOG_MAX_LENGTH error: %v, setting LOG_MAX_LENGTH to 1500 \n", err)
 		logMaxLength = 1500
 	}
 
 	skipCrdCreate, err := strconv.ParseBool(os.Getenv("SKIP_CRD_CREATE"))
 	if err != nil {
-		fmt.Printf("Error while parsing variable config SKIP_CRD_CREATE error: %v, setting SKIP_CRD_CREATE to true", err)
+		fmt.Printf("Error while parsing variable config SKIP_CRD_CREATE error: %v, setting SKIP_CRD_CREATE to true \n", err)
 		skipCrdCreate = false
 	}
-	fmt.Printf("SKIP_CRD_CREATE is set to %v", skipCrdCreate)
+	fmt.Printf("SKIP_CRD_CREATE is set to %v \n", skipCrdCreate)
 
 	taintUntrustedNodes, err := strconv.ParseBool(os.Getenv("TAINT_UNTRUSTED_NODES"))
 	if err != nil {
-		fmt.Println("Error while parsing variable config TAINT_UNTRUSTED_NODES error: %v, setting TAINT_UNTRUSTED_NODES to false", err)
+		fmt.Println("Error while parsing variable config TAINT_UNTRUSTED_NODES error: %v, setting TAINT_UNTRUSTED_NODES to false \n", err)
 		taintUntrustedNodes = false
 	}
-	fmt.Printf("TAINT_UNTRUSTED_NODES is set to %v", taintUntrustedNodes)
+	fmt.Printf("TAINT_UNTRUSTED_NODES is set to %v \n", taintUntrustedNodes)
 
 	tagPrefix := os.Getenv("TAG_PREFIX")
 	if tagPrefix != "" {

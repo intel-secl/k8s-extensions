@@ -48,6 +48,19 @@ spec:
         app: isecl-scheduler
       name: isecl-scheduler
     spec:
+      securityContext:
+        fsGroup: 1001
+      initContainers:
+        - image: busybox:latest
+          name: chmod-pg-data
+          command:
+            - /bin/chown
+            - -R
+            - "1001"
+            - /var/log/isecl-k8s-extensions
+          volumeMounts:
+            - name: scheduler-log
+              mountPath: /var/log/isecl-k8s-extensions
       tolerations:
         - key: node-role.kubernetes.io/master
           operator: Exists
@@ -64,24 +77,35 @@ spec:
         - name: isecl-scheduler
           image: isecl/k8s-scheduler
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
           env:
             - name: LOG_LEVEL
-              value: "INFO"
+              value: "DEBUG"
+            - name: TAG_PREFIX
+              value: "isecl."
+            - name: PORT
+              value: "8888"
+            - name: IHUB_PUBLIC_KEY_FILE_PATH
+              value: "/opt/isecl-k8s-extensions/ihub_public_key.pem"
+            - name: TLS_CERT_PATH
+              value: "/opt/isecl-k8s-extensions/server.crt"
+            - name: TLS_KEY_PATH
+              value: "/opt/isecl-k8s-extensions/server.key"
           volumeMounts:
           - mountPath: /var/log/isecl-k8s-extensions
             name: scheduler-log
-          - mountPath: /opt/isecl-k8s-extensions/isecl-k8s-scheduler/config
-            name: scheduler-config
-          - mountPath: /opt/isecl-k8s-extensions/config
-            name: scheduler-tag-prefix-config
+          - name: scheduler-certs
+            mountPath: /opt/isecl-k8s-extensions/
+            readOnly: true
       volumes:
         - hostPath:
             path: /var/log/isecl-k8s-extensions
+            type: DirectoryOrCreate
           name: scheduler-log
-        - hostPath:
-            path: /opt/isecl-k8s-extensions/isecl-k8s-scheduler/config
-          name: scheduler-config
-        - hostPath:
-            path: /opt/isecl-k8s-extensions/config
-          name: scheduler-tag-prefix-config
- 
+        - name: scheduler-certs
+          secret:
+            secretName: scheduler-certs
+            defaultMode: 0640
+
