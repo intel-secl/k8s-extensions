@@ -6,9 +6,9 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdLabelAnnotate
 
 import (
-	"intel/isecl/k8s-custom-controller/v3/util"
 	"strings"
 
+	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -18,7 +18,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-var Log = util.GetLogger()
+var defaultLog = commLog.GetDefaultLogger()
 
 type APIHelpers interface {
 
@@ -56,7 +56,7 @@ func Getk8sClientHelper(config *rest.Config) (APIHelpers, *k8sclient.Clientset) 
 
 	cli, err := k8sclient.NewForConfig(config)
 	if err != nil {
-		Log.Errorf("Error while creating k8s client %v", err)
+		defaultLog.Errorf("Error while creating k8s client %v", err)
 	}
 	return helper, cli
 }
@@ -66,7 +66,7 @@ func (h K8sHelpers) GetNode(cli *k8sclient.Clientset, NodeName string) (*corev1.
 	// Get the node object using the node name
 	node, err := cli.CoreV1().Nodes().Get(NodeName, metav1.GetOptions{})
 	if err != nil {
-		Log.Errorf("Can't get node: %s", err.Error())
+		defaultLog.Errorf("Can't get node: %s", err.Error())
 		return nil, err
 	}
 
@@ -96,7 +96,7 @@ func (h K8sHelpers) AddLabelsAnnotations(n *corev1.Node, labels Labels, annotati
 		n.Annotations[k] = v
 	}
 	n.Labels = newNodeLabels
-	Log.Info(newNodeLabels)
+	defaultLog.Info(newNodeLabels)
 }
 
 //AddTaint applies labels and annotations to the node
@@ -147,7 +147,7 @@ func (h K8sHelpers) DeleteTaint(n *corev1.Node, key string, value string, effect
 		if t.Key != delT.Key && t.Value != delT.Value && t.Effect != delT.Effect {
 			newTaints = append(newTaints, t)
 		} else {
-			Log.Infof("Dropped %s taint from node %v", effect, n)
+			defaultLog.Infof("Dropped %s taint from node %v", effect, n)
 		}
 	}
 
@@ -162,7 +162,7 @@ func (h K8sHelpers) UpdateNode(c *k8sclient.Clientset, n *corev1.Node) error {
 	// Send the updated node to the apiserver.
 	_, err := c.CoreV1().Nodes().Update(n)
 	if err != nil {
-		Log.Errorf("Error while updating node label:", err.Error())
+		defaultLog.Errorf("Error while updating node label:", err.Error())
 		return err
 	}
 	return nil
@@ -179,7 +179,7 @@ func (h K8sHelpers) DeleteNode(c *k8sclient.Clientset, nodeName string) error {
 	}
 
 	if err != nil {
-		Log.Errorf("Error while deleting node label:", err.Error())
+		defaultLog.Errorf("Error while deleting node label:", err.Error())
 		return err
 	}
 	return nil

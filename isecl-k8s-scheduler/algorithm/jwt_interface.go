@@ -38,12 +38,8 @@ func ParseRSAPublicKeyFromPEM(pubKey []byte) (*rsa.PublicKey, error) {
 }
 
 //ValidateAnnotationByPublicKey is used for validate the annotation(cipher) by public key
-func ValidateAnnotationByPublicKey(cipherText, ihubKeyPath string) error {
-	pubKey, err := ioutil.ReadFile(ihubKeyPath)
-	if err != nil {
-		defaultLog.Fatalf("Error in reading the hub pem file,%v", err)
-	}
-	key, err := ParseRSAPublicKeyFromPEM(pubKey)
+func ValidateAnnotationByPublicKey(cipherText string, iHubPubKey []byte) error {
+	key, err := ParseRSAPublicKeyFromPEM(iHubPubKey)
 	if err != nil {
 		return errors.New("Invalid AH public key")
 	}
@@ -69,7 +65,7 @@ func ValidateAnnotationByPublicKey(cipherText, ihubKeyPath string) error {
 	}
 
 	//Validate the keyid in jwt header
-	block, _ := pem.Decode(pubKey)
+	block, _ := pem.Decode(iHubPubKey)
 	if block == nil || block.Type != "PUBLIC KEY" {
 		defaultLog.Fatal("failed to decode PEM block containing public key")
 	}
@@ -102,12 +98,12 @@ func JWTParseWithClaims(cipherText string, claim jwt.MapClaims) bool {
 }
 
 //CheckAnnotationAttrib is used to validate node with respect to time,trusted and location tags
-func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement, tagPrefix, ihubKeyPath string) bool {
+func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement, iHubPubKey []byte, tagPrefix string) bool {
 	var claims = jwt.MapClaims{}
 
-	validationStatus := ValidateAnnotationByPublicKey(cipherText, ihubKeyPath)
+	validationStatus := ValidateAnnotationByPublicKey(cipherText, iHubPubKey)
 	if validationStatus == nil {
-		defaultLog.Infof("Signature is valid, trust report is from valid Attestation Hub")
+		defaultLog.Infof("Signature is valid, trust report is from valid Integration Hub")
 	} else {
 		defaultLog.Errorf("%v", validationStatus)
 		defaultLog.Errorf("Signature validation failed")

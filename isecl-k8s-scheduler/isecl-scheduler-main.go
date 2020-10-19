@@ -109,7 +109,7 @@ func startServer(router *mux.Router, extenedSchedulerConfig config.Config) error
 func main() {
 	var err error
 
-	logFile, err := os.OpenFile("/var/isecl-k8s-extensions/isecl-scheduler.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0664)
+	logFile, err := os.OpenFile("/var/log/isecl-k8s-extensions/isecl-scheduler.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0664)
 	if err != nil {
 		fmt.Println("Unable to open log file")
 		return
@@ -131,7 +131,7 @@ func main() {
 	router := mux.NewRouter()
 
 	resourceStore := api.ResourceStore{
-		IHubPubKeyPath: extendedSchedConfig.IntegrationHubPublicKey,
+		IHubPubKey: extendedSchedConfig.IntegrationHubPublicKey,
 		TagPrefix:      extendedSchedConfig.TagPrefix,
 	}
 	filterHandler := api.FilterHandler{ResourceStore: resourceStore}
