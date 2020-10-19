@@ -7,23 +7,22 @@ package algorithm
 
 import (
 	"fmt"
-	"intel/isecl/k8s-extended-scheduler/v3/util"
+	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
 
 	v1 "k8s.io/api/core/v1"
 	schedulerapi "k8s.io/kube-scheduler/extender/v1"
 )
 
-var Log = util.GetLogger()
+var defaultLog = commLog.GetDefaultLogger()
 
 //FilteredHost is used for getting the nodes and pod details and verify and return if pod key matches with annotations
-func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedulerapi.ExtenderFilterResult, error) {
+func FilteredHost(args *schedulerapi.ExtenderArgs, tagPrefix, ihubKeyPath string) (*schedulerapi.ExtenderFilterResult, error) {
 	result := []v1.Node{}
 	failedNodesMap := schedulerapi.FailedNodesMap{}
 
 	//Get the list of nodes and pods from base scheduler
 	nodes := args.Nodes
 	pod := args.Pod
-	confTrustPrefix := trustPrefix
 	//Check for presence of Affinity tag in pod specification
 	if pod.Spec.Affinity != nil && pod.Spec.Affinity.NodeAffinity != nil {
 		if pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil && len(pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions) > 0 {
@@ -34,8 +33,8 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 				if cipherVal, ok := node.Annotations["TrustTagSignedReport"]; ok {
 					for _, nodeSelector := range nodeSelectorData {
 						//match the data from the pod node selector tag to the node annotation
-						Log.Infof("Checking annotation for node %v", node)
-						if CheckAnnotationAttrib(cipherVal, nodeSelector.MatchExpressions, confTrustPrefix) {
+						defaultLog.Infof("Checking annotation for node %v", node)
+						if CheckAnnotationAttrib(cipherVal, nodeSelector.MatchExpressions, tagPrefix, ihubKeyPath) {
 							result = append(result, node)
 						} else {
 							failedNodesMap[node.Name] = fmt.Sprintf("Annotation validation failed in extended-scheduler")
@@ -57,7 +56,7 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, trustPrefix string) (*schedul
 		}
 	}
 
-	Log.Infof("Returning following nodelist from extended scheduler: %v", result)
+	defaultLog.Infof("Returning following nodelist from extended scheduler: %v", result)
 	if len(result) != 0 {
 		return &schedulerapi.ExtenderFilterResult{
 			Nodes:       &v1.NodeList{Items: result},

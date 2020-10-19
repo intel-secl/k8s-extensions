@@ -9,12 +9,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"encoding/json"
-	"flag"
 	"fmt"
 	"intel/isecl/k8s-extended-scheduler/v3/api"
-	"intel/isecl/k8s-extended-scheduler/v3/util"
-	"io/ioutil"
+	"intel/isecl/k8s-extended-scheduler/v3/config"
+	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
+	commLogMsg "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/message"
+	commLogInt "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/setup"
 	stdlog "log"
 	"net/http"
 	"os"
@@ -24,29 +24,28 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type Config struct {
 	Trusted string `json:"trusted"`
 }
 
-const TrustedPrefixConf = "/opt/isecl-k8s-extensions/config/"
+var defaultLog = commLog.GetDefaultLogger()
 
-var Log = util.GetLogger()
+func configureLogs(logFile *os.File, loglevel string, maxLength int) error {
 
-func getPrefixFromConf(path string) (string, error) {
-	out, err := ioutil.ReadFile(path)
+	lv, err := logrus.ParseLevel(loglevel)
 	if err != nil {
-		Log.Errorf("Error: %s %v", path, err)
-		return "", err
+		return errors.Wrap(err, "Failed to initiate loggers. Invalid log level: "+loglevel)
 	}
-	s := Config{}
-	err = json.Unmarshal(out, &s)
-	if err != nil {
-		Log.Errorf("Error:  %v", err)
-		return "", err
-	}
-	return s.Trusted, nil
+
+	f := commLog.LogFormatter{MaxLength: maxLength}
+	commLogInt.SetLogger(commLog.DefaultLoggerName, lv, &f, logFile, false)
+
+	defaultLog.Info(commLogMsg.LogInit)
+	return nil
 }
 
 func extendedScheduler(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +54,7 @@ func extendedScheduler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func startServer(router *mux.Router) error {
+func startServer(router *mux.Router, extenedSchedulerConfig config.Config) error {
 	tlsconfig := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
@@ -68,13 +67,10 @@ func startServer(router *mux.Router) error {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGKILL)
 	//get a webserver instance, that contains a muxer, middleware and configuration settings
 
-	// fetch all the cmd line args
-	port, serverCrt, serverKey := util.GetCmdlineArgs()
-
 	//initialize http server config
 	httpWriter := os.Stderr
-	if httpLogFile, err := os.OpenFile(util.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
-		Log.Tracef("service:Start() %+v", err)
+	if httpLogFile, err := os.OpenFile(config.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
+		defaultLog.Tracef("service:Start() %+v", err)
 	} else {
 		defer httpLogFile.Close()
 		httpWriter = httpLogFile
@@ -82,7 +78,7 @@ func startServer(router *mux.Router) error {
 
 	httpLog := stdlog.New(httpWriter, "", 0)
 	h := &http.Server{
-		Addr:      fmt.Sprintf(":%d", port),
+		Addr:      fmt.Sprintf(":%d", extenedSchedulerConfig.Port),
 		Handler:   handlers.RecoveryHandler(handlers.RecoveryLogger(httpLog), handlers.PrintRecoveryStack(true))(handlers.CombinedLoggingHandler(os.Stderr, router)),
 		ErrorLog:  httpLog,
 		TLSConfig: tlsconfig,
@@ -92,12 +88,12 @@ func startServer(router *mux.Router) error {
 
 	// dispatch web server go routine
 	go func() {
-		if err := h.ListenAndServeTLS(serverCrt, serverKey); err != nil {
-			Log.Errorf("failed to start service %+v", err)
+		if err := h.ListenAndServeTLS(extenedSchedulerConfig.ServerCert, extenedSchedulerConfig.ServerKey); err != nil {
+			defaultLog.Errorf("failed to start service %+v", err)
 			stop <- syscall.SIGTERM
 		}
 	}()
-	Log.Info("Service started")
+	defaultLog.Info("Service started")
 
 	<-stop
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -111,27 +107,41 @@ func startServer(router *mux.Router) error {
 }
 
 func main() {
-	Log.Info("Starting ISecL Extended Scheduler...")
 	var err error
 
-	logLevel := flag.String("loglevel", "debug", "Path to a kube config. ")
-	flag.Parse()
-	util.SetLogger(*logLevel)
-	api.Confpath, err = getPrefixFromConf(TrustedPrefixConf + "tag_prefix.conf")
+	logFile, err := os.OpenFile("/var/isecl-k8s-extensions/isecl-scheduler.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0664)
+	if err != nil {
+		fmt.Println("Unable to open log file")
+		return
+	}
+
+	// fetch all the cmd line args
+	extendedSchedConfig, err := config.GetExtendedSchedulerConfig()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error while getting parsing variables %v", err.Error())
+		return
+	}
+
+	configureLogs(logFile, extendedSchedConfig.LogLevel, extendedSchedConfig.LogMaxLength)
 
 	if err != nil {
-		Log.Fatalf("Error while parsing tag prefix %v", err)
+		defaultLog.Fatalf("Error while parsing tag prefix %v", err)
 	}
 
 	router := mux.NewRouter()
 
+	resourceStore := api.ResourceStore{
+		IHubPubKeyPath: extendedSchedConfig.IntegrationHubPublicKey,
+		TagPrefix:      extendedSchedConfig.TagPrefix,
+	}
+	filterHandler := api.FilterHandler{ResourceStore: resourceStore}
 	//handler for the post operation
-	router.HandleFunc("/filter", api.FilterHandler).Methods("POST")
+	router.HandleFunc("/filter", filterHandler.Filter).Methods("POST")
 	router.HandleFunc("/", extendedScheduler).Methods("GET")
 
-	err = startServer(router)
+	err = startServer(router, *extendedSchedConfig)
 	if err != nil {
-		Log.Error("Error starting server")
+		defaultLog.Error("Error starting server")
 	}
-	Log.Infof(" ISecL Extended Scheduler Server exit")
+	defaultLog.Infof(" ISecL Extended Scheduler Server exit")
 }

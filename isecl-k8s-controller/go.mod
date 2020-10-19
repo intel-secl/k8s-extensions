@@ -9,3 +9,5 @@ require (
 	k8s.io/apimachinery v0.17.5-beta.0
 	k8s.io/client-go v0.17.4
 )
+
+go 1.13
