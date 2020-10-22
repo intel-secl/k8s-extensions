@@ -11,6 +11,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestGetPlCrdDef(t *testing.T) {
@@ -29,10 +30,11 @@ func TestGetPlCrdDef(t *testing.T) {
 
 func TestGetPlObjLabel(t *testing.T) {
 	trustObj := trust_schema.Host{
-		Hostname:     "Node123",
-		Trusted:      true,
-		Expiry:       "12-23-45T123.91.12",
-		SignedReport: "495270d6242e2c67e24e22bad49dgdah",
+		Hostname:          "Node123",
+		Trusted:           true,
+		Expiry:            time.Now().AddDate(1, 0, 0),
+		ISeclSignedReport: "495270d6242e2c67e24e22bad49dgdah",
+		SgxSignedReport:   "495270d6242e2c67e24e22bad49dgdah",
 		AssetTag: map[string]string{
 			"country.us":   "true",
 			"country.uk":   "true",

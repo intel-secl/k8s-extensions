@@ -32,9 +32,9 @@ spec:
                         type: string
                       trusted:
                         type: boolean
-                      signedTrustReport:
+                      hvsSignedTrustReport:
                         type: string
-                      validTo:
+                      hvsTrustValidTo:
                         type: string
                       assetTags:
                         type: object
@@ -44,6 +44,20 @@ spec:
                         type: object
                         additionalProperties:
                           type: string
+                      sgx-enabled:
+                        type: string
+                      sgxSignedTrustReport:
+                        type: string
+                      sgxTrustValidTo:
+                        type: string
+                      sgxSupported:
+                        type: string
+                      tcbUpToDate:
+                        type: string
+                      epcSize:
+                        type: string
+                      flcEnabled:
+                        type: string
   # either Namespaced or Cluster
   scope: Namespaced
   names:

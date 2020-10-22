@@ -28,13 +28,20 @@ type HostAttributesCrd struct {
 }
 
 type Host struct {
-	Updated          *time.Time        `json:"updatedTime,omitempty"`
-	Hostname         string            `json:"hostName"`
-	Trusted          bool              `json:"trusted"`
-	Expiry           time.Time         `json:"validTo"`
-	SignedReport     string            `json:"signedTrustReport"`
-	AssetTag         map[string]string `json:"assetTags"`
-	HardwareFeatures map[string]string `json:"hardwareFeatures"`
+	Updated              *time.Time        `json:"updatedTime,omitempty"`
+	Hostname             string            `json:"hostName"`
+	Trusted              bool              `json:"trusted"`
+	HvsTrustExpiry       time.Time         `json:"hvsTrustValidTo,omitempty"`
+	SgxTrustExpiry       time.Time         `json:"sgxTrustValidTo,omitempty"`
+	HvsSignedTrustReport string            `json:"hvsSignedTrustReport,omitempty"`
+	SgxSignedTrustReport string            `json:"sgxSignedTrustReport,omitempty"`
+	AssetTag             map[string]string `json:"assetTags"`
+	HardwareFeatures     map[string]string `json:"hardwareFeatures"`
+	SgxEnabled           string            `json:"sgxEnabled"`
+	SGXSupported         string            `json:"sgxSupported"`
+	TCBUpToDate          string            `json:"tcbUpToDate"`
+	EPCSize              string            `json:"epcSize"`
+	FLCEnabled           string            `json:"flcEnabled"`
 }
 
 type Spec struct {

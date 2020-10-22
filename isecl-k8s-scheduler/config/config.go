@@ -6,7 +6,6 @@ SPDX-License-Identifier: BSD-3-Clause
 package config
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"strconv"
 
 	"github.com/sirupsen/logrus"
+	"intel/isecl/k8s-extended-scheduler/v3/constants"
+	"github.com/pkg/errors"
 )
 
 var tagPrefixRegex = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
@@ -30,7 +31,7 @@ type Config struct {
 	//Server Key to be used for TLS handshake
 	ServerKey string
 	//Integration Hub Key to be used for parsing signed trust report
-	IntegrationHubPublicKey []byte
+	IntegrationHubPublicKeys map[string][]byte
 
 	LogLevel string
 
@@ -47,15 +48,24 @@ func GetExtendedSchedulerConfig() (*Config, error) {
 		fmt.Fprintln(os.Stdout, "Error while parsing Env variable PORT, setting to default value 8888")
 		port = 8888
 	}
+	iHubPublicKeys := make(map[string][]byte, 2)
 
-	iHubPubKeyPath := os.Getenv("IHUB_PUBLIC_KEY_FILE_PATH")
-	if iHubPubKeyPath == ""{
-		return nil, errors.New("Env variable IHUB_PUBLIC_KEY_FILE_PATH is empty")
+	// Get IHub public key from ihub with hvs attestation type
+	iHubPubKeyPath := os.Getenv("HVS_IHUB_PUBLIC_KEY_PATH")
+	if iHubPubKeyPath != ""{
+		iHubPublicKeys[constants.HVSAttestation], err = ioutil.ReadFile(iHubPubKeyPath)
+		if err != nil {
+			return nil, errors.Errorf("Error while reading file %s\n", iHubPubKeyPath)
+		}
 	}
 
-	pubKey, err := ioutil.ReadFile(iHubPubKeyPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr,"Error in reading the hub pem file,%v", err)
+	// Get IHub public key from ihub with skc attestation type
+	iHubPubKeyPath = os.Getenv("SGX_IHUB_PUBLIC_KEY_PATH")
+	if iHubPubKeyPath != ""{
+		iHubPublicKeys[constants.SGXAttestation], err= ioutil.ReadFile(iHubPubKeyPath)
+		if err != nil {
+			return nil, errors.Errorf("Error while reading file %s\n", iHubPubKeyPath)
+		}
 	}
 
 	logLevel := os.Getenv("LOG_LEVEL")
@@ -87,7 +97,7 @@ func GetExtendedSchedulerConfig() (*Config, error) {
 
 	return &Config{
 		Port: port,
-		IntegrationHubPublicKey: pubKey,
+		IntegrationHubPublicKeys: iHubPublicKeys,
 		LogLevel: logLevel,
 		ServerCert: serverCert,
 		ServerKey: serverKey,
