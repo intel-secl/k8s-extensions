@@ -131,8 +131,8 @@ func main() {
 	router := mux.NewRouter()
 
 	resourceStore := api.ResourceStore{
-		IHubPubKey: extendedSchedConfig.IntegrationHubPublicKey,
-		TagPrefix:      extendedSchedConfig.TagPrefix,
+		IHubPubKeys: extendedSchedConfig.IntegrationHubPublicKeys,
+		TagPrefix:  extendedSchedConfig.TagPrefix,
 	}
 	filterHandler := api.FilterHandler{ResourceStore: resourceStore}
 	//handler for the post operation

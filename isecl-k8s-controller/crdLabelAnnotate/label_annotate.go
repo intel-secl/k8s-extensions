@@ -6,8 +6,6 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdLabelAnnotate
 
 import (
-	"strings"
-
 	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -73,30 +71,14 @@ func (h K8sHelpers) GetNode(cli *k8sclient.Clientset, NodeName string) (*corev1.
 	return node, nil
 }
 
-func cleanupLabelsWithIsecl(n *corev1.Node, labelPrefix string) Labels {
-	var newNodeLabels = make(Labels, len(n.Labels))
-	iseclTrustedTag := labelPrefix + "trusted"
-	for k, v := range n.Labels {
-		if strings.HasPrefix(k, labelPrefix) && k != iseclTrustedTag {
-			continue
-		}
-		newNodeLabels[k] = v
-	}
-	return newNodeLabels
-}
-
 //AddLabelsAnnotations applies labels and annotations to the node
 func (h K8sHelpers) AddLabelsAnnotations(n *corev1.Node, labels Labels, annotations Annotations, labelPrefix string) {
-	//Clean up labels with isecl prefix.
-	newNodeLabels := cleanupLabelsWithIsecl(n, labelPrefix)
 	for k, v := range labels {
-		newNodeLabels[k] = v
+		n.Labels[k] = v
 	}
 	for k, v := range annotations {
 		n.Annotations[k] = v
 	}
-	n.Labels = newNodeLabels
-	defaultLog.Info(newNodeLabels)
 }
 
 //AddTaint applies labels and annotations to the node

@@ -10,13 +10,12 @@ import (
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/sha512"
-	"io/ioutil"
-
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
+	"intel/isecl/k8s-extended-scheduler/v3/constants"
 	v1 "k8s.io/api/core/v1"
 	"strings"
 )
@@ -39,11 +38,6 @@ func ParseRSAPublicKeyFromPEM(pubKey []byte) (*rsa.PublicKey, error) {
 
 //ValidateAnnotationByPublicKey is used for validate the annotation(cipher) by public key
 func ValidateAnnotationByPublicKey(cipherText string, iHubPubKey []byte) error {
-	key, err := ParseRSAPublicKeyFromPEM(iHubPubKey)
-	if err != nil {
-		return errors.New("Invalid AH public key")
-	}
-
 	parts := strings.Split(cipherText, ".")
 	if len(parts) != 3 {
 		return errors.New("Invalid token received, token must have 3 parts")
@@ -67,13 +61,18 @@ func ValidateAnnotationByPublicKey(cipherText string, iHubPubKey []byte) error {
 	//Validate the keyid in jwt header
 	block, _ := pem.Decode(iHubPubKey)
 	if block == nil || block.Type != "PUBLIC KEY" {
-		defaultLog.Fatal("failed to decode PEM block containing public key")
+		return errors.New("Failed to decode PEM block containing public key")
 	}
+
 	keyIdBytes := sha1.Sum(block.Bytes)
 	keyIdStr := base64.StdEncoding.EncodeToString(keyIdBytes[:])
 
-	if jwtHeader.KeyId != keyIdStr {
-		return errors.New("Invalid Kid")
+	var key *rsa.PublicKey
+	if jwtHeader.KeyId == keyIdStr {
+		key, err = ParseRSAPublicKeyFromPEM(iHubPubKey)
+		if err != nil {
+			return errors.New("Invalid IHub public key")
+		}
 	}
 
 	signatureString, err := base64.URLEncoding.DecodeString(parts[2])
@@ -98,48 +97,30 @@ func JWTParseWithClaims(cipherText string, claim jwt.MapClaims) bool {
 }
 
 //CheckAnnotationAttrib is used to validate node with respect to time,trusted and location tags
-func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement, iHubPubKey []byte, tagPrefix string) bool {
-	var claims = jwt.MapClaims{}
+func CheckAnnotationAttrib(cipherText string, node []v1.NodeSelectorRequirement, iHubPubKeys map[string][]byte, tagPrefix, attestationType string) bool {
 
-	validationStatus := ValidateAnnotationByPublicKey(cipherText, iHubPubKey)
+	var validationStatus error
+	validationStatus = ValidateAnnotationByPublicKey(cipherText, iHubPubKeys[attestationType])
 	if validationStatus == nil {
-		defaultLog.Infof("Signature is valid, trust report is from valid Integration Hub")
+		defaultLog.Info("Signature is valid, trust report is from valid Integration Hub")
 	} else {
-		defaultLog.Errorf("%v", validationStatus)
-		defaultLog.Errorf("Signature validation failed")
+		defaultLog.Errorf("Signature validation failed with error %v", validationStatus)
 		return false
 	}
 
+	var claims = jwt.MapClaims{}
 	//cipherText is the annotation applied to the node, claims is the parsed AH report assigned as the annotation
-
 	jwtParseStatus := JWTParseWithClaims(cipherText, claims)
 	if !jwtParseStatus {
 		return false
 	}
 
-	defaultLog.Infof("CheckAnnotationAttrib - Parsed claims for %v", claims)
-
-	verify, iseclLabelsExists := ValidatePodWithAnnotation(node, claims, tagPrefix)
-	if verify {
-		defaultLog.Infoln("Node label validated against node annotations successful")
-	} else {
-		defaultLog.Infoln("Node Label did not match node annotation ")
-		return false
+	nodeValidated := false
+	if attestationType == constants.HVSAttestation {
+		nodeValidated = ValidatePodWithHvsAnnotation(node, claims, tagPrefix)
+	} else if attestationType == constants.SGXAttestation {
+		nodeValidated = ValidatePodWithSgxAnnotation(node, claims, tagPrefix)
 	}
 
-	// Skip the validation of expiry time in SignTrustReport, if there is no isecl tag prefix in nodeAffinity
-	// and allow launch of pods having no isecl specific tags in pod/deployment spec.
-	if !iseclLabelsExists {
-		return true
-	}
-
-	trustTimeFlag := ValidateNodeByTime(claims)
-
-	if trustTimeFlag == 1 {
-		defaultLog.Infoln("Attested node validity time check passed")
-		return true
-	} else {
-		defaultLog.Infoln("Attested node validity time has expired")
-		return false
-	}
+	return nodeValidated
 }

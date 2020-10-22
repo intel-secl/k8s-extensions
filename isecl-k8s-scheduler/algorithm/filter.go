@@ -8,6 +8,7 @@ package algorithm
 import (
 	"fmt"
 	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
+	"intel/isecl/k8s-extended-scheduler/v3/constants"
 
 	v1 "k8s.io/api/core/v1"
 	schedulerapi "k8s.io/kube-scheduler/extender/v1"
@@ -16,7 +17,7 @@ import (
 var defaultLog = commLog.GetDefaultLogger()
 
 //FilteredHost is used for getting the nodes and pod details and verify and return if pod key matches with annotations
-func FilteredHost(args *schedulerapi.ExtenderArgs, iHubPubKey []byte, tagPrefix string) (*schedulerapi.ExtenderFilterResult, error) {
+func FilteredHost(args *schedulerapi.ExtenderArgs, iHubPubKeys map[string][]byte, tagPrefix string) (*schedulerapi.ExtenderFilterResult, error) {
 	result := []v1.Node{}
 	failedNodesMap := schedulerapi.FailedNodesMap{}
 
@@ -29,19 +30,46 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, iHubPubKey []byte, tagPrefix 
 			//get the nodeselector data
 			nodeSelectorData := pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
 			for _, node := range nodes.Items {
-				//always check for the trust tag signed report
-				if cipherVal, ok := node.Annotations["TrustTagSignedReport"]; ok {
-					for _, nodeSelector := range nodeSelectorData {
-						//match the data from the pod node selector tag to the node annotation
-						defaultLog.Infof("Checking annotation for node %v", node)
-						if CheckAnnotationAttrib(cipherVal, nodeSelector.MatchExpressions, iHubPubKey, tagPrefix) {
-							result = append(result, node)
+				hvsSignedTrustReportExists := false
+				sgxSignedTrustReportExists := false
+				hvsSignedTrustReportValidated := false
+				sgxSignedTrustReportValidated := false
+				for _, nodeSelector := range nodeSelectorData {
+					if cipherVal, ok := node.Annotations[constants.HvsSignedTrustReport]; ok {
+						//match the data from the pod node selector tag to the node annotation HvsSignedTrustReport
+						defaultLog.Infof("Checking HVS Trust annotation for node %v", node)
+						hvsSignedTrustReportExists = true
+						if CheckAnnotationAttrib(cipherVal, nodeSelector.MatchExpressions, iHubPubKeys, tagPrefix, constants.HVSAttestation) {
+							hvsSignedTrustReportValidated = true
 						} else {
-							failedNodesMap[node.Name] = fmt.Sprintf("Annotation validation failed in extended-scheduler")
+							failedNodesMap[node.Name] = fmt.Sprintf("ISecL Trust Annotation validation failed in extended-scheduler")
 						}
 					}
+					if cipherVal, ok := node.Annotations[constants.SgxSignedTrustReport]; ok {
+						//match the data from the pod node selector tag to the node annotation SgxSignedTrustReport
+						defaultLog.Infof("Checking SGX Trust annotation for node %v", node)
+						sgxSignedTrustReportExists = true
+						if CheckAnnotationAttrib(cipherVal, nodeSelector.MatchExpressions, iHubPubKeys, tagPrefix, constants.SGXAttestation) {
+							sgxSignedTrustReportValidated = true
+						} else {
+							failedNodesMap[node.Name] = fmt.Sprintf("SGX Trust Annotation validation failed in extended-scheduler")
+						}
+					}
+				}
+				if hvsSignedTrustReportExists && sgxSignedTrustReportExists{
+					if hvsSignedTrustReportValidated && sgxSignedTrustReportValidated{
+						result = append(result, node)
+					}
+				} else if hvsSignedTrustReportExists {
+					if hvsSignedTrustReportValidated {
+						result = append(result, node)
+					}
+				} else if sgxSignedTrustReportExists{
+					if sgxSignedTrustReportValidated {
+						result = append(result, node)
+					}
 				} else {
-					//If there is no TrustTagSignReport on Node then return the node.
+					//If there is no HvsSignedTrustReport or HvsSignedTrustReport on Node then return the node.
 					result = append(result, node)
 				}
 			}
