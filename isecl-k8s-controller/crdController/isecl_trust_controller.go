@@ -32,7 +32,12 @@ import (
 var trustLabelRegex = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
 var TaintUntrustedNodes = false
 
-const MAX_BYTES_LEN = 200
+const (
+	// lenSGXLabels is the number of SGX Features that are currently supported per node
+	lenSGXLabels = 5
+	// lenTrustLabels is the number of mandatory ISecL labels that are required per node
+	lenTrustLabels = 2
+)
 
 type IseclHAController struct {
 	indexer  cache.Indexer
@@ -43,6 +48,7 @@ type IseclHAController struct {
 type Config struct {
 	Trusted string `json:"trusted"`
 }
+
 var defaultLog = commLog.GetDefaultLogger()
 
 func NewIseclHAController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller) *IseclHAController {
@@ -171,45 +177,51 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, tagPrefix string) (crd
 	assetTagSize := len(obj.AssetTag)
 	hwFeaturesSize := len(obj.HardwareFeatures)
 
-	var lbl = make(crdLabelAnnotate.Labels, assetTagSize+hwFeaturesSize+2)
-	var annotation = make(crdLabelAnnotate.Annotations, 1)
-	trustPresent := false
+	// allocate labels for:
+	// ISecL Trust Status
+	// ISecL Asset Tags
+	// ISecL Hardware Features
+	// SGX Labels
+	var lbl = make(crdLabelAnnotate.Labels, lenTrustLabels+assetTagSize+hwFeaturesSize+lenSGXLabels)
 
-	for key, val := range obj.AssetTag {
-		labelkey := strings.Replace(key, " ", ".", -1)
-		labelkey = strings.Replace(labelkey, ":", ".", -1)
-		labelkey = tagPrefix + labelkey
-		lbl[labelkey] = val
-	}
+	// we need to allocate separate annotations for the SignedTrustReport from iSecL iHub and SGX iHubs
+	var annotation = make(crdLabelAnnotate.Annotations, 2)
 
-	for key, val := range obj.HardwareFeatures {
-		labelkey := strings.Replace(key, " ", ".", -1)
-		labelkey = strings.Replace(labelkey, ":", ".", -1)
-		labelkey = tagPrefix + labelkey
-		lbl[labelkey] = val
-	}
+	if obj.HvsSignedTrustReport != "" {
+		annotation[hvsSignTrustReport] = obj.HvsSignedTrustReport
 
-	trustLabelWithPrefix := tagPrefix + trustlabel
+		expiry := strings.Replace(obj.HvsTrustExpiry.Format(time.RFC3339), ":", ".", -1)
+		lbl[hvsTrustExpiry] = expiry
 
-	//Comparing with existing node labels
-	for key, value := range node.Labels {
-		if key == trustLabelWithPrefix {
-			trustPresent = true
-			if value == strconv.FormatBool(obj.Trusted) {
-				defaultLog.Infof("No change in Trustlabel: %s", node.Name)
-			} else {
-				defaultLog.Infof("Updating complete Trustlabel for the node: %s", node.Name)
-				lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
-			}
+		trustLabelWithPrefix := tagPrefix + trustlabel
+		lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
+
+		for key, val := range obj.AssetTag {
+			labelkey := strings.Replace(key, " ", ".", -1)
+			labelkey = strings.Replace(labelkey, ":", ".", -1)
+			labelkey = tagPrefix + labelkey
+			lbl[labelkey] = val
+		}
+
+		for key, val := range obj.HardwareFeatures {
+			labelkey := strings.Replace(key, " ", ".", -1)
+			labelkey = strings.Replace(labelkey, ":", ".", -1)
+			labelkey = tagPrefix + labelkey
+			lbl[labelkey] = val
 		}
 	}
-	if !trustPresent {
-		defaultLog.Info("Trust value was not present on node adding for first time: %s", node.Name)
-		lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
+	if obj.SgxSignedTrustReport != "" {
+		annotation[sgxSignTrustReport] = obj.SgxSignedTrustReport
+
+		expiry := strings.Replace(obj.SgxTrustExpiry.Format(time.RFC3339), ":", ".", -1)
+
+		lbl[sgxTrustExpiry] = expiry
+		lbl[sgxEnable] = obj.SgxEnabled
+		lbl[sgxSupported] = obj.SGXSupported
+		lbl[flcEnabled] = obj.FLCEnabled
+		lbl[tcbUpToDate] = obj.TCBUpToDate
+		lbl[epcMemory] = obj.EPCSize
 	}
-	expiry := strings.Replace(obj.Expiry.Format(time.RFC3339), ":", ".", -1)
-	lbl[trustexpiry] = expiry
-	annotation[trustsignreport] = obj.SignedReport
 
 	return lbl, annotation, nil
 }

@@ -19,14 +19,13 @@ import (
 var defaultLog = commLog.GetDefaultLogger()
 
 type ResourceStore struct {
-	IHubPubKey []byte
+	IHubPubKeys map[string][]byte
 	TagPrefix string
 }
 
 type FilterHandler struct {
 	ResourceStore ResourceStore
 }
-
 
 //FilterHandler is the filter host.
 func (f *FilterHandler) Filter(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +50,7 @@ func (f *FilterHandler) Filter(w http.ResponseWriter, r *http.Request) {
 
 	defaultLog.Infof("Post received at ISecL extended scheduler, ExtenderArgs: %v", args)
 	//Create a binding for args passed to the POST api
-	result, err := algorithm.FilteredHost(&args, f.ResourceStore.IHubPubKey, f.ResourceStore.TagPrefix)
+	result, err := algorithm.FilteredHost(&args, f.ResourceStore.IHubPubKeys, f.ResourceStore.TagPrefix)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		defaultLog.Errorf("Error while serving request %v", err)

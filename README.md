@@ -63,13 +63,9 @@ Install Pre-requisites
 ```
 
 #### Deploy isecl-controller
-* Create a home directory for /opt/isecl-k8s-extensions
+* Copy isecl-k8s-extensions.tar.gz output build to /opt/ directory and extract the contents
 ```console
-mkdir /opt/isecl-k8s-extensions
-```
-* Copy tar output of makefile to /opt/isecl-k8s-extensions home directory and extract the contents
-```console
-cd /opt/isecl-k8s-extensions
+cd /opt/
 tar -xvzf isecl-k8s-extensions.tar.gz
 ```
 * Load docker images isecl-controller and isecl-scheduler
@@ -79,6 +75,7 @@ docker load -i docker-isecl-scheduler-v*.tar
 ``` 
 * Create hostattributes.crd.isecl.intel.com crd
 ```console
+cd /opt/isecl-k8s-extensions
 kubectl apply -f yamls/crd-1.17.yaml
 ```
 
@@ -88,12 +85,12 @@ kubectl get crds
 ```
 * Fields for isecl-controller configuration in isecl-controller.yaml
 
-Field | Required | Type | Default
--------|----------|------|---------
-LOG_LEVEL | `Optional` |`string` | INFO |
-LOG_MAX_LENGTH | `Optional` |`int` | 1500 |
-TAG_PREFIX | `Optional` | `string` | isecl. |
-TAINT_UNTRUSTED_NODES | `Optional` | `string` | false |
+Field | Required | Type | Default | Comments |
+-------|----------|------|---------|---------|
+LOG_LEVEL | `Optional` |`string` | INFO | Determines the log level |
+LOG_MAX_LENGTH | `Optional` |`int` | 1500 | Maximum length of characters in a line in log file |
+TAG_PREFIX | `Optional` | `string` | isecl. | A custom prefix which can be applied to isecl attributes that are pushed from IH. |
+TAINT_UNTRUSTED_NODES | `Optional` | `string` | false | If set to true. NoExec taint applied to the nodes for which trust status is set to false |
 
 * Deploy isecl-controller
 ```console
@@ -120,7 +117,7 @@ kubectl describe secret default-token-<name> -n isecl
 
 * Create a directory for storing certificates
 ```console
-mkdir `pwd`/secrets
+mkdir secrets
 ```
 * Create tls key pair for isecl-scheduler service, which is signed by k8s apiserver.crt
 ```console
@@ -128,24 +125,25 @@ chmod +x create_k8s_extsched_cert.sh
 ./create_k8s_extsched_cert.sh -n "K8S Extended Scheduler" -s "$MASTER_IP","$HOSTNAME" -c /etc/kubernetes/pki/ca.crt -k /etc/kubernetes/pki/ca.key
 ```
 
-* Copy ihub_public_key.pem from isecl integration hub to **`pwd`/secrets** directory
+* Copy ihub_public_key.pem from isecl integration hub to **secrets** directory
 
 * Create kubernetes secrets ```scheduler-secret``` for isecl-scheduler
 ```console
-kubectl create secret generic scheduler-certs --namespace isecl --from-file=`pwd`/secrets
+kubectl create secret generic scheduler-certs --namespace isecl --from-file=secrets
 ```
 
 * Fields for isecl-scheduler configuration in isecl-scheduler.yaml
 
-Field | Required | Type | Default
--------|----------|------|---------
-PORT | `Optional` | `string` | 8888 | 
-IHUB_PUBLIC_KEY_FILE_PATH | `Required` |`string` | |
-LOG_LEVEL | `Optional` |`string` | INFO |
-LOG_MAX_LENGTH | `Optional` |`int` | 1500 |
-TLS_CERT_PATH | `Required` | `string` | |
-TLS_KEY_PATH | `Required` | `string` | |
-TAG_PREFIX | `Optional` | `string` | isecl. |
+Field | Required | Type | Default | Comments
+-------|----------|------|---------|--------
+PORT | `Optional` | `string` | 8888 | ISecl scheduler service port  |
+HVS_IHUB_PUBLIC_KEY_FILE_PATH | `Required` |`string` | | Required for IHub with HVS Attestation |
+SGX_IHUB_PUBLIC_KEY_FILE_PATH | `Required` |`string` | | Required for IHub with SGX Attestation |
+LOG_LEVEL | `Optional` |`string` | INFO | Determines the log level |
+LOG_MAX_LENGTH | `Optional` |`int` | 1500 | Maximum length of characters in a line in log file |
+TLS_CERT_PATH | `Required` | `string` | | Tls certificate path for isecl scheduler service |
+TLS_KEY_PATH | `Required` | `string` | | Tls key path for isecl scheduler service |
+TAG_PREFIX | `Optional` | `string` | isecl. | A custom prefix which can be applied to isecl attributes that are pushed from IH |
 
 * Deploy isecl-scheduler
 ```console
