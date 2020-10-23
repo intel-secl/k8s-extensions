@@ -7,5 +7,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.4.2
 	k8s.io/kube-scheduler v0.18.2
+	github.com/Waterdrips/jwt-go v3.2.1-0.20200915121943-f6506928b72e+incompatible
 
 )
