@@ -13,7 +13,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/Waterdrips/jwt-go"
 	"github.com/pkg/errors"
 	"intel/isecl/k8s-extended-scheduler/v3/constants"
 	v1 "k8s.io/api/core/v1"
