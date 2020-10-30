@@ -19,7 +19,7 @@ SERVICE=isecl-k8s-scheduler
 # Generate the service binary and executable
 .DEFAULT_GOAL: $(SERVICE)
 $(SERVICE):
-	go mod download
+	env GOSUMDB=off GOPROXY=direct go mod download
 	@rm -f ${GOPATH}/pkg/mod/k8s.io/kubernetes*/plugin/pkg/scheduler/api/zz_generated.deepcopy.go
 	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/$(SERVICE)/version.Version=$(VERSION) -X intel/isecl/$(SERVICE)/version.GitHash=$(GITCOMMIT)" -o out/$(SERVICE)
 
