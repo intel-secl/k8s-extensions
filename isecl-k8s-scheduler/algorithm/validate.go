@@ -43,27 +43,28 @@ func ValidatePodWithHvsAnnotation(nodeData []v1.NodeSelectorRequirement, claims 
 		if strings.Contains(val.Key, trustprefix) {
 			val.Key = strings.Split(val.Key, trustprefix)[1]
 		}
-
+		aTagVal, assetClaimsPresent := assetClaims[val.Key]
+		hwFeatureValue, hardwareFeatureClaimsPresent := hardwareFeatureClaims[val.Key]
+		trustTag, trustTagPresent := claims[val.Key]
 		// if val is trusted, it can be directly found in claims
-		switch val.Key {
-		case trustprefix + constants.Trusted:
+		switch true {
+		case trustTagPresent:
 			meExistInClaims = true
 			for _, nodeVal := range val.Values {
-				sigVal := claims[constants.Trusted]
-				sigValTemp := sigVal.(bool)
-				sigVal = strconv.FormatBool(sigValTemp)
-				if nodeVal == sigVal {
-					continue
-				} else {
-					defaultLog.Infof("ValidatePodWithHvsAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
-					return false
+				if sigValTemp, ok := trustTag.(bool); ok{
+					sigVal := strconv.FormatBool(sigValTemp)
+					if nodeVal == sigVal {
+						continue
+					} else {
+						defaultLog.Infof("ValidatePodWithHvsAnnotation - Trust Check - Mismatch in %v field. Actual: %v | In Signature: %v ", val.Key, nodeVal, sigVal)
+						return false
+					}
 				}
 			}
 
 		// validate asset tags
-		case assetClaims[val.Key]:
+		case assetClaimsPresent:
 			meExistInClaims = true
-			aTagVal := assetClaims[val.Key]
 			flag := false
 			for _, match := range val.Values {
 				if match == aTagVal {
@@ -79,9 +80,8 @@ func ValidatePodWithHvsAnnotation(nodeData []v1.NodeSelectorRequirement, claims 
 			}
 
 		// validate HW features
-		case hardwareFeatureClaims[val.Key]:
+		case hardwareFeatureClaimsPresent:
 			meExistInClaims = true
-			hwFeatureValue := hardwareFeatureClaims[val.Key]
 			flag := false
 			for _, match := range val.Values {
 				if match == hwFeatureValue {
