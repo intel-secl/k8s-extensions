@@ -197,17 +197,20 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, tagPrefix string) (crd
 		lbl[trustLabelWithPrefix] = strconv.FormatBool(obj.Trusted)
 
 		for key, val := range obj.AssetTag {
-			labelkey := strings.Replace(key, " ", ".", -1)
-			labelkey = strings.Replace(labelkey, ":", ".", -1)
-			labelkey = tagPrefix + labelkey
+			labelkey := tagPrefix + key
 			lbl[labelkey] = val
 		}
 
 		for key, val := range obj.HardwareFeatures {
-			labelkey := strings.Replace(key, " ", ".", -1)
-			labelkey = strings.Replace(labelkey, ":", ".", -1)
-			labelkey = tagPrefix + labelkey
+			labelkey := tagPrefix + key
 			lbl[labelkey] = val
+		}
+
+		//Remove the older asset tags/ hardware features in node labels
+		for key, _ := range node.Labels {
+			if 	_, ok := lbl[key]; !ok && strings.Contains(key, tagPrefix){
+				delete(node.Labels, key)
+			}
 		}
 	}
 	if obj.SgxSignedTrustReport != "" {
