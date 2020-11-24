@@ -30,7 +30,7 @@ docker: $(SERVICE)
 ifeq ($(PROXY_EXISTS),1)
 	docker build --no-cache -t isecl/k8s-scheduler:$(VERSION) --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -f ./dist/docker/Dockerfile ./out
 else
-	docker build --no-cache -t isecl/k8s-scheduler:$(VERSION)  -f ./dist/docker/Dockerfile ./out
+	docker build --no-cache -t isecl/k8s-scheduler:$(VERSION) --network host -f ./dist/docker/Dockerfile ./out
 endif
 	docker save isecl/k8s-scheduler:$(VERSION) > ./out/docker-isecl-scheduler-$(VERSION).tar
 
