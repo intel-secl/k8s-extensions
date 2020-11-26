@@ -10,4 +10,4 @@ require (
 	k8s.io/client-go v0.17.4
 )
 
-replace github.com/intel-secl/intel-secl/v3 => gitlab.devtools.intel.com/sst/isecl/intel-secl/v3 v3.3/develop
+replace github.com/intel-secl/intel-secl/v3 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v3 v3.3/develop
