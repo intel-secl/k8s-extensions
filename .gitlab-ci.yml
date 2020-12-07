@@ -24,12 +24,13 @@ Stylechecker:
        
 checkmarx:
   stage: scan
+  allow_failure: true
   only:
      - merge_requests
   services:
       - docker:dind
   image:
-    name: 10.105.168.120:5000/checkmarx:isecl
+    name: ${DOCKER_REGISTRY_SERVER}:${DOCKER_REGISTRY_PORT}/checkmarx:isecl
     entrypoint: ['']
   tags:
     - docker-checkmarx
