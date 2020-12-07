@@ -81,7 +81,10 @@ func ValidateAnnotationByPublicKey(cipherText string, iHubPubKey []byte) error {
 	}
 
 	h := sha512.New384()
-	h.Write([]byte(parts[0] + "." + parts[1]))
+	_, err = h.Write([]byte(parts[0] + "." + parts[1]))
+	if err != nil {
+		return errors.Wrap(err, "Error while writing data")
+	}
 	return rsa.VerifyPKCS1v15(key, crypto.SHA384, h.Sum(nil), signatureString)
 }
 
