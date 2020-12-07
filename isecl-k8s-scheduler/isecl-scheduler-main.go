@@ -72,7 +72,12 @@ func startServer(router *mux.Router, extenedSchedulerConfig config.Config) error
 	if httpLogFile, err := os.OpenFile(config.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
 		defaultLog.Tracef("service:Start() %+v", err)
 	} else {
-		defer httpLogFile.Close()
+		defer func() {
+			derr := httpLogFile.Close()
+			if derr != nil {
+				defaultLog.WithError(derr).Error("Error closing file")
+			}
+		}()
 		httpWriter = httpLogFile
 	}
 
@@ -122,10 +127,9 @@ func main() {
 		return
 	}
 
-	configureLogs(logFile, extendedSchedConfig.LogLevel, extendedSchedConfig.LogMaxLength)
-
+	err = configureLogs(logFile, extendedSchedConfig.LogLevel, extendedSchedConfig.LogMaxLength)
 	if err != nil {
-		defaultLog.Fatalf("Error while parsing tag prefix %v", err)
+		defaultLog.Fatalf("Error while configuring logs %v", err)
 	}
 
 	router := mux.NewRouter()

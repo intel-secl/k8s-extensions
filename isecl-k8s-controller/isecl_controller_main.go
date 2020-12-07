@@ -89,7 +89,10 @@ func main() {
 		return
 	}
 
-	configureLogs(logFile, logLevel, logMaxLength)
+	err = configureLogs(logFile, logLevel, logMaxLength)
+	if err != nil {
+		defaultLog.Fatalf("Error while configuring logs %v", err)
+	}
 
 	kubeConf := os.Getenv("kubeconf")
 
