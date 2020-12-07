@@ -113,7 +113,10 @@ func (c *IseclHAController) syncFromQueue(key string) error {
 		// Note that you also have to check the uid if you have a local controlled resource, which
 		// is dependent on the actual instance, to detect that a CRD object was recreated with the same name
 		defaultLog.Infof("Sync/Add/Update for PL CRD Object %#v ", obj)
-		c.processPLQueue(key)
+		err = c.processPLQueue(key)
+		if err != nil {
+			defaultLog.Fatalf("Error while processing queue %v", err)
+		}
 	}
 	return nil
 }

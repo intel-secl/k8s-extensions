@@ -64,6 +64,9 @@ func (f *FilterHandler) Filter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	bytes.NewBuffer(resultBytes).WriteTo(w)
+	_, err = bytes.NewBuffer(resultBytes).WriteTo(w)
+	if err != nil {
+		defaultLog.Errorf("Error while writing response %v", err)
+	}
 	return
 }
