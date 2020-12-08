@@ -30,8 +30,7 @@ type JwtHeader struct {
 func ParseRSAPublicKeyFromPEM(pubKey []byte) (*rsa.PublicKey, error) {
 	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(pubKey)
 	if err != nil {
-		defaultLog.Errorf("error in ParseRSAPublicKeyFromPEM")
-		return nil, err
+		return nil, errors.Wrap(err, "Error while parsing IHub public key")
 	}
 	return verifyKey, err
 }
@@ -71,8 +70,10 @@ func ValidateAnnotationByPublicKey(cipherText string, iHubPubKey []byte) error {
 	if jwtHeader.KeyId == keyIdStr {
 		key, err = ParseRSAPublicKeyFromPEM(iHubPubKey)
 		if err != nil {
-			return errors.New("Invalid IHub public key")
+			return err
 		}
+	} else {
+		return errors.New("Invalid IHub public key")
 	}
 
 	signatureString, err := base64.URLEncoding.DecodeString(parts[2])
