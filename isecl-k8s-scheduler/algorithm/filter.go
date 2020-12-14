@@ -56,15 +56,15 @@ func FilteredHost(args *schedulerapi.ExtenderArgs, iHubPubKeys map[string][]byte
 						}
 					}
 				}
-				if hvsSignedTrustReportExists && sgxSignedTrustReportExists{
-					if hvsSignedTrustReportValidated && sgxSignedTrustReportValidated{
+				if hvsSignedTrustReportExists && sgxSignedTrustReportExists {
+					if hvsSignedTrustReportValidated && sgxSignedTrustReportValidated {
 						result = append(result, node)
 					}
 				} else if hvsSignedTrustReportExists {
 					if hvsSignedTrustReportValidated {
 						result = append(result, node)
 					}
-				} else if sgxSignedTrustReportExists{
+				} else if sgxSignedTrustReportExists {
 					if sgxSignedTrustReportValidated {
 						result = append(result, node)
 					}
