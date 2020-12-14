@@ -12,9 +12,9 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"intel/isecl/k8s-extended-scheduler/v3/constants"
-	"github.com/pkg/errors"
 )
 
 var tagPrefixRegex = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
@@ -44,7 +44,7 @@ func GetExtendedSchedulerConfig() (*Config, error) {
 
 	//PORT for the extended scheduler to listen.
 	port, err := strconv.Atoi(os.Getenv("PORT"))
-	if err != nil{
+	if err != nil {
 		fmt.Fprintln(os.Stdout, "Error while parsing Env variable PORT, setting to default value 8888")
 		port = 8888
 	}
@@ -52,7 +52,7 @@ func GetExtendedSchedulerConfig() (*Config, error) {
 
 	// Get IHub public key from ihub with hvs attestation type
 	iHubPubKeyPath := os.Getenv("HVS_IHUB_PUBLIC_KEY_PATH")
-	if iHubPubKeyPath != ""{
+	if iHubPubKeyPath != "" {
 		iHubPublicKeys[constants.HVSAttestation], err = ioutil.ReadFile(iHubPubKeyPath)
 		if err != nil {
 			return nil, errors.Errorf("Error while reading file %s\n", iHubPubKeyPath)
@@ -61,32 +61,32 @@ func GetExtendedSchedulerConfig() (*Config, error) {
 
 	// Get IHub public key from ihub with skc attestation type
 	iHubPubKeyPath = os.Getenv("SGX_IHUB_PUBLIC_KEY_PATH")
-	if iHubPubKeyPath != ""{
-		iHubPublicKeys[constants.SGXAttestation], err= ioutil.ReadFile(iHubPubKeyPath)
+	if iHubPubKeyPath != "" {
+		iHubPublicKeys[constants.SGXAttestation], err = ioutil.ReadFile(iHubPubKeyPath)
 		if err != nil {
 			return nil, errors.Errorf("Error while reading file %s\n", iHubPubKeyPath)
 		}
 	}
 
 	logLevel := os.Getenv("LOG_LEVEL")
-	if logLevel == ""{
-		fmt.Fprintln(os.Stdout,"Env variable LOG_LEVEL is empty, setting to default value Info")
+	if logLevel == "" {
+		fmt.Fprintln(os.Stdout, "Env variable LOG_LEVEL is empty, setting to default value Info")
 		logLevel = "INFO"
 	}
 
 	logMaxLen, err := strconv.Atoi(os.Getenv("LOG_MAX_LENGTH"))
-	if err != nil{
+	if err != nil {
 		fmt.Fprintln(os.Stdout, "Env variable LOG_MAX_LENGTH is empty, setting to default value 1500")
 		logMaxLen = 1500
 	}
 
 	serverCert := os.Getenv("TLS_CERT_PATH")
-	if serverCert == ""{
+	if serverCert == "" {
 		return nil, errors.New("Env variable TLS_CERT_PATH is empty")
 	}
 
 	serverKey := os.Getenv("TLS_KEY_PATH")
-	if serverKey == ""{
+	if serverKey == "" {
 		return nil, errors.New("Env variable TLS_KEY_PATH is empty")
 	}
 
@@ -96,12 +96,12 @@ func GetExtendedSchedulerConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Port: port,
+		Port:                     port,
 		IntegrationHubPublicKeys: iHubPublicKeys,
-		LogLevel: logLevel,
-		ServerCert: serverCert,
-		ServerKey: serverKey,
-		TagPrefix: tagPrefix,
-		LogMaxLength: logMaxLen,
+		LogLevel:                 logLevel,
+		ServerCert:               serverCert,
+		ServerKey:                serverKey,
+		TagPrefix:                tagPrefix,
+		LogMaxLength:             logMaxLen,
 	}, nil
 }

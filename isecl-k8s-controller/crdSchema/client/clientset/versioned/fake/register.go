@@ -21,10 +21,10 @@ package fake
 import (
 	crdv1beta1 "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilruntime "k8s.io/apimachinery/pkg/config/runtime"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	utilruntime "k8s.io/apimachinery/pkg/config/runtime"
 )
 
 var scheme = runtime.NewScheme()

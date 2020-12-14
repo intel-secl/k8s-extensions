@@ -10,11 +10,11 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"intel/isecl/k8s-extended-scheduler/v3/api"
-	"intel/isecl/k8s-extended-scheduler/v3/config"
 	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
 	commLogMsg "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/message"
 	commLogInt "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/setup"
+	"intel/isecl/k8s-extended-scheduler/v3/api"
+	"intel/isecl/k8s-extended-scheduler/v3/config"
 	stdlog "log"
 	"net/http"
 	"os"
@@ -136,7 +136,7 @@ func main() {
 
 	resourceStore := api.ResourceStore{
 		IHubPubKeys: extendedSchedConfig.IntegrationHubPublicKeys,
-		TagPrefix:  extendedSchedConfig.TagPrefix,
+		TagPrefix:   extendedSchedConfig.TagPrefix,
 	}
 	filterHandler := api.FilterHandler{ResourceStore: resourceStore}
 	//handler for the post operation

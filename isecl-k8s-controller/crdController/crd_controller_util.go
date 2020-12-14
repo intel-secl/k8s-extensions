@@ -16,16 +16,16 @@ import (
 )
 
 const (
-	hvsTrustExpiry      = "HvsTrustExpiry"
-	sgxTrustExpiry      = "SgxTrustExpiry"
-	trustlabel          = "trusted"
-	hvsSignTrustReport  = "HvsSignedTrustReport"
-	sgxSignTrustReport  = "SgxSignedTrustReport"
-	sgxEnable           = "SGX-Enabled"
-	sgxSupported        = "SGX-Supported"
-	flcEnabled          = "FLC-Enabled"
-	tcbUpToDate         = "TCBUpToDate"
-	epcMemory           = "EPC-Memory"
+	hvsTrustExpiry     = "HvsTrustExpiry"
+	sgxTrustExpiry     = "SgxTrustExpiry"
+	trustlabel         = "trusted"
+	hvsSignTrustReport = "HvsSignedTrustReport"
+	sgxSignTrustReport = "SgxSignedTrustReport"
+	sgxEnable          = "SGX-Enabled"
+	sgxSupported       = "SGX-Supported"
+	flcEnabled         = "FLC-Enabled"
+	tcbUpToDate        = "TCBUpToDate"
+	epcMemory          = "EPC-Memory"
 )
 
 type CrdDefinition struct {

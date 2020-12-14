@@ -8,8 +8,8 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"intel/isecl/k8s-extended-scheduler/v3/algorithm"
 	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
+	"intel/isecl/k8s-extended-scheduler/v3/algorithm"
 	"io/ioutil"
 	"net/http"
 
@@ -20,7 +20,7 @@ var defaultLog = commLog.GetDefaultLogger()
 
 type ResourceStore struct {
 	IHubPubKeys map[string][]byte
-	TagPrefix string
+	TagPrefix   string
 }
 
 type FilterHandler struct {

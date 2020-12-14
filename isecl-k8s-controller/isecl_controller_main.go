@@ -16,12 +16,12 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/workqueue"
-	"github.com/sirupsen/logrus"
-	"github.com/pkg/errors"
 )
 
 // GetClientConfig returns rest config, if path not specified assume in cluster config
@@ -29,7 +29,8 @@ func GetClientConfig(kubeconfig string) (*rest.Config, error) {
 	return clientcmd.BuildConfigFromFlags("", kubeconfig)
 }
 
-const  logFilePath = "/var/log/isecl-k8s-extensions/isecl-controller.log"
+const logFilePath = "/var/log/isecl-k8s-extensions/isecl-controller.log"
+
 var defaultLog = commLog.GetDefaultLogger()
 
 func configureLogs(logFile *os.File, loglevel string, maxLength int) error {
@@ -46,16 +47,15 @@ func configureLogs(logFile *os.File, loglevel string, maxLength int) error {
 	return nil
 }
 
-
 func main() {
 
 	fmt.Println("Starting ISecL Custom Controller")
 
 	logLevel := os.Getenv("LOG_LEVEL")
 	if logLevel == "" {
-                fmt.Printf("LOG_LEVEL cannot be empty setting to default value INFO")
-                logLevel="INFO"
-        }
+		fmt.Printf("LOG_LEVEL cannot be empty setting to default value INFO")
+		logLevel = "INFO"
+	}
 
 	logMaxLength, err := strconv.Atoi(os.Getenv("LOG_MAX_LENGTH"))
 	if err != nil {

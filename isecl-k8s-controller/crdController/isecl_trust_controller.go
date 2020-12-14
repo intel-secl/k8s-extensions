@@ -7,8 +7,8 @@ package crdController
 
 import (
 	"fmt"
-	"intel/isecl/k8s-custom-controller/v3/crdLabelAnnotate"
 	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
+	"intel/isecl/k8s-custom-controller/v3/crdLabelAnnotate"
 	ha_schema "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
 	ha_client "intel/isecl/k8s-custom-controller/v3/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -211,7 +211,7 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, tagPrefix string) (crd
 
 		//Remove the older asset tags/ hardware features in node labels
 		for key, _ := range node.Labels {
-			if 	_, ok := lbl[key]; !ok && strings.Contains(key, tagPrefix){
+			if _, ok := lbl[key]; !ok && strings.Contains(key, tagPrefix) {
 				delete(node.Labels, key)
 			}
 		}

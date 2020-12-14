@@ -16,15 +16,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-
-
 func keyExists(decoded map[string]interface{}, key string) bool {
 	val, ok := decoded[key]
 	return ok && val != nil
 }
 
 //ValidatePodWithAnnotation is to validate signed trusted and location report with pod keys and values
-func ValidatePodWithHvsAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string)  bool {
+func ValidatePodWithHvsAnnotation(nodeData []v1.NodeSelectorRequirement, claims jwt.MapClaims, trustprefix string) bool {
 	assetClaims := make(map[string]interface{})
 	hardwareFeatureClaims := make(map[string]interface{})
 
@@ -51,7 +49,7 @@ func ValidatePodWithHvsAnnotation(nodeData []v1.NodeSelectorRequirement, claims 
 		case trustTagPresent:
 			meExistInClaims = true
 			for _, nodeVal := range val.Values {
-				if sigValTemp, ok := trustTag.(bool); ok{
+				if sigValTemp, ok := trustTag.(bool); ok {
 					sigVal := strconv.FormatBool(sigValTemp)
 					if nodeVal == sigVal {
 						continue
@@ -99,7 +97,7 @@ func ValidatePodWithHvsAnnotation(nodeData []v1.NodeSelectorRequirement, claims 
 	}
 
 	// Do not validate expiry for non isecl affinity rules
-	if !meExistInClaims{
+	if !meExistInClaims {
 		return true
 	}
 	defaultLog.Info("Successfully validated with hvs signed trust report claims")
@@ -188,7 +186,7 @@ func ValidatePodWithSgxAnnotation(nodeData []v1.NodeSelectorRequirement, claims 
 	}
 
 	// Do not validate expiry for non isecl affinity rules or matching expression present in k8s manifests
-	if !meExistInClaims{
+	if !meExistInClaims {
 		return true
 	}
 
