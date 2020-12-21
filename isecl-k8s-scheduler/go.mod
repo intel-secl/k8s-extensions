@@ -9,5 +9,3 @@ require (
 	k8s.io/kube-scheduler v0.18.2
 
 )
-
-replace github.com/intel-secl/intel-secl/v3 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v3 v3.3/develop
