@@ -15,6 +15,7 @@ import (
 	commLogInt "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/setup"
 	"intel/isecl/k8s-extended-scheduler/v3/api"
 	"intel/isecl/k8s-extended-scheduler/v3/config"
+	"io"
 	stdlog "log"
 	"net/http"
 	"os"
@@ -41,8 +42,9 @@ func configureLogs(logFile *os.File, loglevel string, maxLength int) error {
 		return errors.Wrap(err, "Failed to initiate loggers. Invalid log level: "+loglevel)
 	}
 
+	ioWriterDefault := io.MultiWriter(os.Stdout, logFile)
 	f := commLog.LogFormatter{MaxLength: maxLength}
-	commLogInt.SetLogger(commLog.DefaultLoggerName, lv, &f, logFile, false)
+	commLogInt.SetLogger(commLog.DefaultLoggerName, lv, &f, ioWriterDefault, false)
 
 	defaultLog.Info(commLogMsg.LogInit)
 	return nil

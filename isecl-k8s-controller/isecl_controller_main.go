@@ -10,6 +10,7 @@ import (
 	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
 	commLogMsg "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/message"
 	commLogInt "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/setup"
+	"io"
 
 	"intel/isecl/k8s-custom-controller/v3/crdController"
 	"os"
@@ -39,9 +40,9 @@ func configureLogs(logFile *os.File, loglevel string, maxLength int) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to initiate loggers. Invalid log level: "+loglevel)
 	}
-
+	ioWriterDefault := io.MultiWriter(os.Stdout, logFile)
 	f := commLog.LogFormatter{MaxLength: maxLength}
-	commLogInt.SetLogger(commLog.DefaultLoggerName, lv, &f, logFile, false)
+	commLogInt.SetLogger(commLog.DefaultLoggerName, lv, &f, ioWriterDefault, false)
 
 	defaultLog.Info(commLogMsg.LogInit)
 	return nil
