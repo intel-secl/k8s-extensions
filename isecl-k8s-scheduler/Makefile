@@ -6,6 +6,7 @@
 # ISecL K8S Extensions Extended Scheduler
 # Works in tandem with K8s scheduler to return a filtered list of nodes as per predicates on CRDs
 
+SHELL:=/bin/bash
 GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
 VERSION := $(or ${GITTAG}, v0.0.0)

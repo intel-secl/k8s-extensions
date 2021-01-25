@@ -6,6 +6,7 @@
 # ISecL K8S Custom Controller
 # Applies labels as per Custom Resource Definitions
 
+SHELL:=/bin/bash
 GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
 VERSION := $(or ${GITTAG}, v0.0.0)
