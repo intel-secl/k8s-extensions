@@ -90,8 +90,6 @@ spec:
             runAsUser: 1001
             runAsGroup: 1001
           env:
-            - name: SKIP_CRD_CREATE
-              value: "true"
             - name: TAINT_UNTRUSTED_NODES
               value: "false"
             - name: LOG_LEVEL

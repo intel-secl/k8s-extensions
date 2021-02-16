@@ -19,7 +19,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/workqueue"
@@ -64,13 +63,6 @@ func main() {
 		logMaxLength = 1500
 	}
 
-	skipCrdCreate, err := strconv.ParseBool(os.Getenv("SKIP_CRD_CREATE"))
-	if err != nil {
-		fmt.Printf("Error while parsing variable config SKIP_CRD_CREATE error: %v, setting SKIP_CRD_CREATE to true \n", err)
-		skipCrdCreate = false
-	}
-	fmt.Printf("SKIP_CRD_CREATE is set to %v \n", skipCrdCreate)
-
 	taintUntrustedNodes, err := strconv.ParseBool(os.Getenv("TAINT_UNTRUSTED_NODES"))
 	if err != nil {
 		fmt.Println("Error while parsing variable config TAINT_UNTRUSTED_NODES error: %v, setting TAINT_UNTRUSTED_NODES to false \n", err)
@@ -103,24 +95,8 @@ func main() {
 		return
 	}
 
-	cs, err := apiextcs.NewForConfig(config)
-	if err != nil {
-		defaultLog.Errorf("Error in config %v", err)
-		return
-	}
-
 	//Create mutex to sync operation between the two CRD threads
 	var crdmutex = &sync.Mutex{}
-
-	if !skipCrdCreate {
-		CrdDef := crdController.GetHACrdDef()
-		//crdController.NewIseclCustomResourceDefinition to create CRD
-		err = crdController.NewIseclCustomResourceDefinition(cs, &CrdDef)
-		if err != nil {
-			defaultLog.Errorf("Error in creating hostattributes CRD %v", err)
-			return
-		}
-	}
 
 	if taintUntrustedNodes {
 		crdController.TaintUntrustedNodes = true

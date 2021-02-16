@@ -12,7 +12,6 @@ import (
 	ha_schema "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
 	ha_client "intel/isecl/k8s-custom-controller/v3/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -29,7 +28,6 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-var trustLabelRegex = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
 var TaintUntrustedNodes = false
 
 const (
@@ -38,6 +36,26 @@ const (
 	// lenTrustLabels is the number of mandatory ISecL labels that are required per node
 	lenTrustLabels = 2
 )
+
+const (
+	hvsTrustExpiry     = "HvsTrustExpiry"
+	sgxTrustExpiry     = "SgxTrustExpiry"
+	trustlabel         = "trusted"
+	hvsSignTrustReport = "HvsSignedTrustReport"
+	sgxSignTrustReport = "SgxSignedTrustReport"
+	sgxEnable          = "SGX-Enabled"
+	sgxSupported       = "SGX-Supported"
+	flcEnabled         = "FLC-Enabled"
+	tcbUpToDate        = "TCBUpToDate"
+	epcMemory          = "EPC-Memory"
+)
+
+type CrdDefinition struct {
+	Plural   string
+	Singular string
+	Group    string
+	Kind     string
+}
 
 type IseclHAController struct {
 	indexer  cache.Indexer

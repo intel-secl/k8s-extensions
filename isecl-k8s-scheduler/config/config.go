@@ -13,7 +13,6 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"intel/isecl/k8s-extended-scheduler/v3/constants"
 )
 
@@ -21,8 +20,6 @@ var tagPrefixRegex = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
 
 const LogFile = "/var/log/isecl-k8s-extensions/isecl-k8s-scheduler.log"
 const HttpLogFile = "/var/log/isecl-k8s-extensions/isecl-k8s-scheduler-http.log"
-
-var Log *logrus.Logger
 
 type Config struct {
 	Port int //Port for the Extended scheduler to listen on

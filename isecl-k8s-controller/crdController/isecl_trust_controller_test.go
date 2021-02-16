@@ -30,11 +30,11 @@ func TestGetPlCrdDef(t *testing.T) {
 
 func TestGetPlObjLabel(t *testing.T) {
 	trustObj := trust_schema.Host{
-		Hostname:          "Node123",
-		Trusted:           true,
-		Expiry:            time.Now().AddDate(1, 0, 0),
-		ISeclSignedReport: "495270d6242e2c67e24e22bad49dgdah",
-		SgxSignedReport:   "495270d6242e2c67e24e22bad49dgdah",
+		Hostname:             "Node123",
+		Trusted:              true,
+		HvsTrustExpiry:       time.Now().AddDate(1, 0, 0),
+		HvsSignedTrustReport: "495270d6242e2c67e24e22bad49dgdah",
+		SgxSignedTrustReport: "495270d6242e2c67e24e22bad49dgdah",
 		AssetTag: map[string]string{
 			"country.us":   "true",
 			"country.uk":   "true",
@@ -48,7 +48,7 @@ func TestGetPlObjLabel(t *testing.T) {
 	tagConfPath := "../tag-prefix-config/tag_prefix.conf"
 	t.Log(os.Getwd())
 	recvlabel, recannotate, _ := GetHaObjLabel(trustObj, node, tagConfPath)
-	prefix, _ := getPrefixFromConf(tagConfPath)
+	prefix := "isecl."
 	if _, ok := recvlabel[prefix+"trusted"]; ok {
 		t.Logf("Found in HA label Trusted field")
 	} else {

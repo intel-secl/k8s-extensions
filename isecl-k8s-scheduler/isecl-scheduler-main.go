@@ -29,10 +29,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Config struct {
-	Trusted string `json:"trusted"`
-}
-
 var defaultLog = commLog.GetDefaultLogger()
 
 func configureLogs(logFile *os.File, loglevel string, maxLength int) error {
@@ -125,7 +121,7 @@ func main() {
 	// fetch all the cmd line args
 	extendedSchedConfig, err := config.GetExtendedSchedulerConfig()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error while getting parsing variables %v", err.Error())
+		fmt.Fprintf(os.Stderr, "Error while getting parsing variables %v\n", err.Error())
 		return
 	}
 
