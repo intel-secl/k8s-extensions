@@ -16,13 +16,13 @@ kind: ClusterRole
 metadata:
   name: isecl-controller
 rules:
-- apiGroups: ["crd.isecl.intel.com"]
-  resources: ["*"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-- apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["get", "list", "watch", "update", "patch", "delete"]
-  
+  - apiGroups: [ "crd.isecl.intel.com" ]
+    resources: [ "*" ]
+    verbs: [ "get", "list", "watch", "create", "update", "patch", "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "nodes" ]
+    verbs: [ "get", "list", "watch", "update", "patch", "delete" ]
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -34,9 +34,9 @@ roleRef:
   kind: ClusterRole
   name: isecl-controller
 subjects:
-- kind: ServiceAccount
-  name: default
-  namespace: isecl
+  - kind: ServiceAccount
+    name: default
+    namespace: isecl
 
 ---
 apiVersion: apps/v1
@@ -79,9 +79,8 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
-                 -
-                  key: node-role.kubernetes.io/master
-                  operator: Exists
+                  - key: node-role.kubernetes.io/master
+                    operator: Exists
       containers:
         - name: isecl-controller
           image: isecl/k8s-controller
@@ -94,11 +93,13 @@ spec:
               value: "false"
             - name: LOG_LEVEL
               value: "INFO"
+            - name: LOG_MAX_LENGTH
+              value: "2000"
             - name: TAG_PREFIX
               value: "isecl."
           volumeMounts:
-          - mountPath: /var/log/isecl-k8s-extensions
-            name: controller-log
+            - mountPath: /var/log/isecl-k8s-extensions
+              name: controller-log
       volumes:
         - hostPath:
             path: /var/log/isecl-k8s-extensions
