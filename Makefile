@@ -12,8 +12,8 @@ installer:
 	./build-k8s-extensions.sh	 
 	mkdir -p out/isecl-k8s-extensions/yamls
 	cp -r certificate-generation-scripts/* out/isecl-k8s-extensions/
-	cp isecl-k8s-scheduler/out/docker-isecl-scheduler-$(VERSION).tar out/isecl-k8s-extensions/
-	cp isecl-k8s-controller/out/docker-isecl-controller-$(VERSION).tar out/isecl-k8s-extensions/
+	cp isecl-k8s-scheduler/out/*.tar out/isecl-k8s-extensions/
+	cp isecl-k8s-controller/out/*.tar out/isecl-k8s-extensions/
 	cp -r isecl-k8s-controller/yamls/* out/isecl-k8s-extensions/yamls
 	cp -r isecl-k8s-scheduler/yamls/* out/isecl-k8s-extensions/yamls
 	cp -r isecl-k8s-scheduler/config-files/*  out/isecl-k8s-extensions/

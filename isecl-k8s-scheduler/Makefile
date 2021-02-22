@@ -35,7 +35,10 @@ else
 endif
 	docker save isecl/k8s-scheduler:$(VERSION) > ./out/docker-isecl-scheduler-$(VERSION).tar
 
-all: clean docker
+oci-archive: docker
+	skopeo copy docker-daemon:isecl/k8s-scheduler:$(VERSION) oci-archive:out/isecl-k8s-scheduler-$(VERSION)-$(GITCOMMIT).tar
+
+all: clean oci-archive
 # Removes the generated service config and binary files
 .PHONY: clean
 clean:
