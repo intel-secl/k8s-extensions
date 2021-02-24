@@ -10,7 +10,10 @@ import (
 	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
 	commLogMsg "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/message"
 	commLogInt "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/setup"
+	"intel/isecl/k8s-custom-controller/v3/constants"
 	"io"
+	"regexp"
+	"strings"
 
 	"intel/isecl/k8s-custom-controller/v3/crdController"
 	"os"
@@ -31,7 +34,10 @@ func GetClientConfig(kubeconfig string) (*rest.Config, error) {
 
 const logFilePath = "/var/log/isecl-k8s-extensions/isecl-controller.log"
 
-var defaultLog = commLog.GetDefaultLogger()
+var (
+	defaultLog     = commLog.GetDefaultLogger()
+	tagPrefixRegex = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
+)
 
 func configureLogs(logFile *os.File, loglevel string, maxLength int) error {
 
@@ -51,65 +57,96 @@ func main() {
 
 	fmt.Println("Starting ISecL Custom Controller")
 
-	logLevel := os.Getenv("LOG_LEVEL")
-	if logLevel == "" {
-		fmt.Printf("LOG_LEVEL cannot be empty setting to default value INFO")
-		logLevel = "INFO"
+	var (
+		logMaxLength        int
+		logLevel            string
+		taintUntrustedNodes bool
+		err                 error
+	)
+
+	logLevelEnv := os.Getenv(constants.LogLevelEnv)
+	if logLevelEnv == "" {
+		fmt.Printf("%s cannot be empty setting to default value %s",
+			constants.LogLevelEnv, constants.LogLevelDefault)
+		logLevel = constants.LogLevelDefault
+	} else {
+		logrusLvl, err := logrus.ParseLevel(strings.ToUpper(logLevelEnv))
+		if err != nil {
+			fmt.Printf("%s is invalid loglevel. Setting to default value %s",
+				constants.LogLevelEnv, constants.LogLevelDefault)
+			logLevel = constants.LogLevelDefault
+		} else {
+			logLevel = logrusLvl.String()
+		}
 	}
 
-	logMaxLength, err := strconv.Atoi(os.Getenv("LOG_MAX_LENGTH"))
+	logMaxLengthEnv := os.Getenv(constants.LogMaxLengthEnv)
+	if logMaxLengthEnv == "" {
+		fmt.Printf("%s cannot be empty setting to default value %d",
+			constants.LogMaxLengthEnv, constants.LogMaxLengthDefault)
+		logMaxLength = constants.LogMaxLengthDefault
+	} else if logMaxLength, err = strconv.Atoi(logMaxLengthEnv); err != nil {
+		fmt.Printf("Error while parsing variable config %s error: %v, defaulting to %d \n",
+			constants.LogMaxLengthEnv, err, constants.LogMaxLengthDefault)
+		logMaxLength = constants.LogMaxLengthDefault
+	} else if logMaxLength <= 0 {
+		fmt.Printf("%s should be > 0, defaulting to %d\n",
+			constants.LogMaxLengthEnv, constants.LogMaxLengthDefault)
+		logMaxLength = constants.LogMaxLengthDefault
+	}
+
+	taintUntrustedNodesEnv := os.Getenv(constants.TaintUntrustedNodesEnv)
+	if taintUntrustedNodesEnv == "" {
+		fmt.Printf("%s cannot be empty setting to default value %d",
+			constants.TaintUntrustedNodesEnv, constants.TaintUntrustedNodesDefault)
+		taintUntrustedNodes = constants.TaintUntrustedNodesDefault
+	} else if taintUntrustedNodes, err = strconv.ParseBool(taintUntrustedNodesEnv); err != nil {
+		fmt.Printf("Error while parsing variable config %s error: %v, defaulting to %d \n",
+			constants.TaintUntrustedNodesEnv, err, constants.TaintUntrustedNodesDefault)
+		taintUntrustedNodes = constants.TaintUntrustedNodesDefault
+	}
+
+	tagPrefix := os.Getenv(constants.TagPrefixEnv)
+	if tagPrefix == "" {
+		fmt.Printf("%s cannot be empty setting to default value %d",
+			constants.TagPrefixEnv, constants.TagPrefixDefault)
+		tagPrefix = constants.TagPrefixDefault
+	} else if !tagPrefixRegex.MatchString(tagPrefix) {
+		fmt.Fprintf(os.Stderr, "%s has an unsupported value. Exiting.", constants.TagPrefixEnv)
+		os.Exit(constants.ErrExitCode)
+	}
+
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, constants.FilePerms)
 	if err != nil {
-		fmt.Printf("Error while parsing variable config LOG_MAX_LENGTH error: %v, setting LOG_MAX_LENGTH to 1500 \n", err)
-		logMaxLength = 1500
-	}
-
-	taintUntrustedNodes, err := strconv.ParseBool(os.Getenv("TAINT_UNTRUSTED_NODES"))
-	if err != nil {
-		fmt.Println("Error while parsing variable config TAINT_UNTRUSTED_NODES error: %v, setting TAINT_UNTRUSTED_NODES to false \n", err)
-		taintUntrustedNodes = false
-	}
-	fmt.Printf("TAINT_UNTRUSTED_NODES is set to %v \n", taintUntrustedNodes)
-
-	tagPrefix := os.Getenv("TAG_PREFIX")
-	if tagPrefix != "" {
-		fmt.Println("Env Variable TAG_PREFIX is empty setting to default value isecl.")
-		tagPrefix = "isecl."
-	}
-
-	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0664)
-	if err != nil {
-		fmt.Println("Unable to open log file")
+		fmt.Fprintf(os.Stderr, "Unable to open log file")
 		return
 	}
 
+	// configure logs
 	err = configureLogs(logFile, logLevel, logMaxLength)
 	if err != nil {
 		defaultLog.Fatalf("Error while configuring logs %v", err)
 	}
 
-	kubeConf := os.Getenv("kubeconf")
-
+	// load cluster configuration
+	kubeConf := os.Getenv(constants.KubeconfEnv)
 	config, err := GetClientConfig(kubeConf)
 	if err != nil {
 		defaultLog.Errorf("Error in config %v", err)
 		return
 	}
 
-	//Create mutex to sync operation between the two CRD threads
-	var crdmutex = &sync.Mutex{}
+	crdController.TaintUntrustedNodes = taintUntrustedNodes
 
-	if taintUntrustedNodes {
-		crdController.TaintUntrustedNodes = true
-	}
 	// Create a queue
-	queue := workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "iseclcontroller")
+	queue := workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.WgName)
 
-	indexer, informer := crdController.NewIseclHAIndexerInformer(config, queue, crdmutex, tagPrefix)
+	indexer, informer := crdController.NewIseclHAIndexerInformer(config, queue, &sync.Mutex{}, tagPrefix)
 
 	controller := crdController.NewIseclHAController(queue, indexer, informer)
 	stop := make(chan struct{})
 	defer close(stop)
-	go controller.Run(1, stop)
+	go controller.Run(constants.MinThreadiness, stop)
 
 	defaultLog.Info("Waiting for updates on ISecl Custom Resource Definitions")
 

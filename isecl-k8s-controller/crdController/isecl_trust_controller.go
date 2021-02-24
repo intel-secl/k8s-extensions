@@ -63,10 +63,6 @@ type IseclHAController struct {
 	queue    workqueue.RateLimitingInterface
 }
 
-type Config struct {
-	Trusted string `json:"trusted"`
-}
-
 var defaultLog = commLog.GetDefaultLogger()
 
 func NewIseclHAController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller) *IseclHAController {
@@ -228,7 +224,7 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, tagPrefix string) (crd
 		}
 
 		//Remove the older asset tags/ hardware features in node labels
-		for key, _ := range node.Labels {
+		for key := range node.Labels {
 			if _, ok := lbl[key]; !ok && strings.Contains(key, tagPrefix) {
 				delete(node.Labels, key)
 			}

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	jwt "github.com/Waterdrips/jwt-go"
+	"github.com/Waterdrips/jwt-go"
 	"intel/isecl/k8s-extended-scheduler/v3/constants"
 	v1 "k8s.io/api/core/v1"
 )
