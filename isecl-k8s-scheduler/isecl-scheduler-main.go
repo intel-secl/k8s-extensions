@@ -15,6 +15,7 @@ import (
 	commLogInt "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/setup"
 	"intel/isecl/k8s-extended-scheduler/v3/api"
 	"intel/isecl/k8s-extended-scheduler/v3/config"
+	"intel/isecl/k8s-extended-scheduler/v3/constants"
 	"io"
 	stdlog "log"
 	"net/http"
@@ -28,10 +29,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
-
-type Config struct {
-	Trusted string `json:"trusted"`
-}
 
 var defaultLog = commLog.GetDefaultLogger()
 
@@ -71,7 +68,7 @@ func startServer(router *mux.Router, extenedSchedulerConfig config.Config) error
 
 	//initialize http server config
 	httpWriter := os.Stderr
-	if httpLogFile, err := os.OpenFile(config.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
+	if httpLogFile, err := os.OpenFile(constants.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
 		defaultLog.Tracef("service:Start() %+v", err)
 	} else {
 		defer func() {
@@ -116,7 +113,7 @@ func startServer(router *mux.Router, extenedSchedulerConfig config.Config) error
 func main() {
 	var err error
 
-	logFile, err := os.OpenFile("/var/log/isecl-k8s-extensions/isecl-scheduler.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0664)
+	logFile, err := os.OpenFile(constants.LogFilePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, constants.FilePerms)
 	if err != nil {
 		fmt.Println("Unable to open log file")
 		return
@@ -125,7 +122,7 @@ func main() {
 	// fetch all the cmd line args
 	extendedSchedConfig, err := config.GetExtendedSchedulerConfig()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error while getting parsing variables %v", err.Error())
+		fmt.Fprintf(os.Stderr, "Error while getting parsing variables %v\n", err.Error())
 		return
 	}
 
@@ -142,12 +139,12 @@ func main() {
 	}
 	filterHandler := api.FilterHandler{ResourceStore: resourceStore}
 	//handler for the post operation
-	router.HandleFunc("/filter", filterHandler.Filter).Methods("POST")
-	router.HandleFunc("/", extendedScheduler).Methods("GET")
+	router.HandleFunc("/filter", filterHandler.Filter).Methods(http.MethodPost)
+	router.HandleFunc("/", extendedScheduler).Methods(http.MethodGet)
 
 	err = startServer(router, *extendedSchedConfig)
 	if err != nil {
 		defaultLog.Error("Error starting server")
 	}
-	defaultLog.Infof(" ISecL Extended Scheduler Server exit")
+	defaultLog.Info("ISecL Extended Scheduler Server exit")
 }

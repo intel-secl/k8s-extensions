@@ -12,7 +12,6 @@ import (
 	ha_schema "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
 	ha_client "intel/isecl/k8s-custom-controller/v3/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -29,7 +28,6 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-var trustLabelRegex = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")
 var TaintUntrustedNodes = false
 
 const (
@@ -39,14 +37,30 @@ const (
 	lenTrustLabels = 2
 )
 
+const (
+	hvsTrustExpiry     = "HvsTrustExpiry"
+	sgxTrustExpiry     = "SgxTrustExpiry"
+	trustlabel         = "trusted"
+	hvsSignTrustReport = "HvsSignedTrustReport"
+	sgxSignTrustReport = "SgxSignedTrustReport"
+	sgxEnable          = "SGX-Enabled"
+	sgxSupported       = "SGX-Supported"
+	flcEnabled         = "FLC-Enabled"
+	tcbUpToDate        = "TCBUpToDate"
+	epcMemory          = "EPC-Memory"
+)
+
+type CrdDefinition struct {
+	Plural   string
+	Singular string
+	Group    string
+	Kind     string
+}
+
 type IseclHAController struct {
 	indexer  cache.Indexer
 	informer cache.Controller
 	queue    workqueue.RateLimitingInterface
-}
-
-type Config struct {
-	Trusted string `json:"trusted"`
 }
 
 var defaultLog = commLog.GetDefaultLogger()
@@ -210,7 +224,7 @@ func GetHaObjLabel(obj ha_schema.Host, node *corev1.Node, tagPrefix string) (crd
 		}
 
 		//Remove the older asset tags/ hardware features in node labels
-		for key, _ := range node.Labels {
+		for key := range node.Labels {
 			if _, ok := lbl[key]; !ok && strings.Contains(key, tagPrefix) {
 				delete(node.Labels, key)
 			}

@@ -21,7 +21,7 @@ Key Components:
 - makeself
 - `go` version >= `go1.12.1` & <= `go1.14.1`
 
-# Step By Step Build Instructions
+# Step-By-Step Build Instructions
 
 ## Install required shell commands
 
