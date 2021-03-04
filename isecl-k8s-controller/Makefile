@@ -31,7 +31,6 @@ ifeq ($(PROXY_EXISTS),1)
 else
 	docker build --no-cache -t isecl/k8s-controller:$(VERSION)  -f ./dist/docker/Dockerfile ./out
 endif
-	docker save isecl/k8s-controller:$(VERSION) > ./out/docker-isecl-controller-$(VERSION).tar
 
 oci-archive: docker
 	skopeo copy docker-daemon:isecl/k8s-controller:$(VERSION) oci-archive:out/isecl-k8s-controller-$(VERSION)-$(GITCOMMIT).tar

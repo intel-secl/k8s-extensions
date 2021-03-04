@@ -33,7 +33,6 @@ ifeq ($(PROXY_EXISTS),1)
 else
 	docker build --no-cache -t isecl/k8s-scheduler:$(VERSION)  -f ./dist/docker/Dockerfile ./out
 endif
-	docker save isecl/k8s-scheduler:$(VERSION) > ./out/docker-isecl-scheduler-$(VERSION).tar
 
 oci-archive: docker
 	skopeo copy docker-daemon:isecl/k8s-scheduler:$(VERSION) oci-archive:out/isecl-k8s-scheduler-$(VERSION)-$(GITCOMMIT).tar
