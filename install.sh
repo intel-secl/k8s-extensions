@@ -52,8 +52,6 @@ EOF
 echo ""
 echo "Deploying isecl k8s controller"
 
-#Load isecl k8s controller docker image into local repository
-docker load -i docker-isecl-controller-*.tar
 
 IFS=' '
 k8sversion=$(kubelet --version)
@@ -69,8 +67,6 @@ if [[ "$majorVersion" == "v1" && "$minorVersion" -ge 16 ]]; then
 else 
   kubectl apply -f yamls/crd-1.14.yaml
 fi
-
-kubectl apply -f yamls/isecl-controller.yaml
 
 cp -r yamls $K8S_EXTENSIONS_DIR/
 echo ""
@@ -105,8 +101,4 @@ fi
 mv server.crt ${K8S_EXTENSIONS_SCHEDULER_CONFIG_DIR}/
 mv server.key ${K8S_EXTENSIONS_SCHEDULER_CONFIG_DIR}/
 
-docker load -i docker-isecl-scheduler-*.tar
-kubectl apply -f yamls/isecl-scheduler.yaml
-
-systemctl daemon-reload
 systemctl restart kubelet
