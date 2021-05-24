@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdLabelAnnotate
 
 import (
-	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
+	commLog "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"

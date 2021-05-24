@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
-	"intel/isecl/k8s-extended-scheduler/v3/api"
+	"intel/isecl/k8s-extended-scheduler/v4/api"
 	"net/http"
 	"net/http/httptest"
 	"testing"

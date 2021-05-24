@@ -7,10 +7,10 @@ package crdController
 
 import (
 	"fmt"
-	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
-	"intel/isecl/k8s-custom-controller/v3/crdLabelAnnotate"
-	ha_schema "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
-	ha_client "intel/isecl/k8s-custom-controller/v3/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
+	commLog "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log"
+	"intel/isecl/k8s-custom-controller/v4/crdLabelAnnotate"
+	ha_schema "intel/isecl/k8s-custom-controller/v4/crdSchema/api/hostattribute/v1beta1"
+	ha_client "intel/isecl/k8s-custom-controller/v4/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"strings"

@@ -7,8 +7,8 @@ package algorithm
 
 import (
 	"fmt"
-	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
-	"intel/isecl/k8s-extended-scheduler/v3/constants"
+	commLog "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log"
+	"intel/isecl/k8s-extended-scheduler/v4/constants"
 
 	v1 "k8s.io/api/core/v1"
 	schedulerapi "k8s.io/kube-scheduler/extender/v1"

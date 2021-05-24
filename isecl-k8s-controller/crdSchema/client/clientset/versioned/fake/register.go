@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	crdv1beta1 "intel/isecl/k8s-custom-controller/v3/crdSchema/api/hostattribute/v1beta1"
+	crdv1beta1 "intel/isecl/k8s-custom-controller/v4/crdSchema/api/hostattribute/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/config/runtime"
 	runtime "k8s.io/apimachinery/pkg/runtime"

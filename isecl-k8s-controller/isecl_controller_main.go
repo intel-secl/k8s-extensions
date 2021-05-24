@@ -7,15 +7,15 @@ package main
 
 import (
 	"fmt"
-	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
-	commLogMsg "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/message"
-	commLogInt "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log/setup"
-	"intel/isecl/k8s-custom-controller/v3/constants"
+	commLog "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log"
+	commLogMsg "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log/message"
+	commLogInt "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log/setup"
+	"intel/isecl/k8s-custom-controller/v4/constants"
 	"io"
 	"regexp"
 	"strings"
 
-	"intel/isecl/k8s-custom-controller/v3/crdController"
+	"intel/isecl/k8s-custom-controller/v4/crdController"
 	"os"
 	"strconv"
 	"sync"

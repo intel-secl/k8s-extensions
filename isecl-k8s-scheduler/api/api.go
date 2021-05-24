@@ -8,8 +8,8 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	commLog "github.com/intel-secl/intel-secl/v3/pkg/lib/common/log"
-	"intel/isecl/k8s-extended-scheduler/v3/algorithm"
+	commLog "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log"
+	"intel/isecl/k8s-extended-scheduler/v4/algorithm"
 	"io/ioutil"
 	"net/http"
 
