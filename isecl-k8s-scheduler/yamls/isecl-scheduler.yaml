@@ -82,7 +82,7 @@ spec:
             runAsGroup: 1001
           env:
             - name: LOG_LEVEL
-              value: "DEBUG"
+              value: "INFO"
             - name: TAG_PREFIX
               value: "isecl."
             - name: PORT
