@@ -7,9 +7,8 @@
 # Works in tandem with K8s scheduler to return a filtered list of nodes as per predicates on CRDs
 
 SHELL:=/bin/bash
-GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
-VERSION := $(or ${GITTAG}, v0.0.0)
+VERSION := "v4.0.0"
 DESCRIPTION="ISecL K8S Extended Scheduler"
 GOPATH := $(shell go env GOPATH)
 PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
