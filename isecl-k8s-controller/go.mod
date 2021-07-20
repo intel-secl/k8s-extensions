@@ -8,5 +8,3 @@ require (
 	k8s.io/apimachinery v0.17.5-beta.0
 	k8s.io/client-go v0.17.4
 )
-
-replace github.com/intel-secl/intel-secl/v4 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v4 v4.0/develop
