@@ -58,10 +58,12 @@ func main() {
 	fmt.Println("Starting ISecL Custom Controller")
 
 	var (
-		logMaxLength        int
-		logLevel            string
-		taintUntrustedNodes bool
-		err                 error
+		logMaxLength         int
+		logLevel             string
+		taintUntrustedNodes  bool
+		taintRegisteredNodes bool
+		taintRebootedNodes   bool
+		err                  error
 	)
 
 	logLevelEnv := os.Getenv(constants.LogLevelEnv)
@@ -106,6 +108,28 @@ func main() {
 		taintUntrustedNodes = constants.TaintUntrustedNodesDefault
 	}
 
+	taintRegisteredNodesEnv := os.Getenv(constants.TaintRegisteredNodesEnv)
+	if taintRegisteredNodesEnv == "" {
+		fmt.Printf("%s cannot be empty setting to default value %d",
+			constants.TaintRegisteredNodesEnv, constants.TaintRegisteredNodesDefault)
+		taintRegisteredNodes = constants.TaintRegisteredNodesDefault
+	} else if taintRegisteredNodes, err = strconv.ParseBool(taintRegisteredNodesEnv); err != nil {
+		fmt.Printf("Error while parsing variable config %s error: %v, defaulting to %d \n",
+			constants.TaintRegisteredNodesEnv, err, constants.TaintRegisteredNodesDefault)
+		taintRegisteredNodes = constants.TaintRegisteredNodesDefault
+	}
+
+	taintRebootedNodesEnv := os.Getenv(constants.TaintRebootedNodesEnv)
+	if taintRebootedNodesEnv == "" {
+		fmt.Printf("%s cannot be empty setting to default value %d",
+			constants.TaintRebootedNodesEnv, constants.TaintRebootedNodesDefault)
+		taintRebootedNodes = constants.TaintRebootedNodesDefault
+	} else if taintRebootedNodes, err = strconv.ParseBool(taintRebootedNodesEnv); err != nil {
+		fmt.Printf("Error while parsing variable config %s error: %v, defaulting to %d \n",
+			constants.TaintRebootedNodesEnv, err, constants.TaintRebootedNodesDefault)
+		taintRebootedNodes = constants.TaintRebootedNodesDefault
+	}
+
 	tagPrefix := os.Getenv(constants.TagPrefixEnv)
 	if tagPrefix == "" {
 		fmt.Printf("%s cannot be empty setting to default value %d",
@@ -137,16 +161,24 @@ func main() {
 	}
 
 	crdController.TaintUntrustedNodes = taintUntrustedNodes
+	crdController.TaintRegisteredNodes = taintRegisteredNodes
+	crdController.TaintRebootedNodes = taintRebootedNodes
 
 	// Create a queue
 	queue := workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.WgName)
 
 	indexer, informer := crdController.NewIseclHAIndexerInformer(config, queue, &sync.Mutex{}, tagPrefix)
-
 	controller := crdController.NewIseclHAController(queue, indexer, informer)
+
 	stop := make(chan struct{})
 	defer close(stop)
 	go controller.Run(constants.MinThreadiness, stop)
+
+	if crdController.TaintRegisteredNodes || crdController.TaintRebootedNodes {
+		taintIndexer, taintInformer := crdController.NewIseclTaintHAIndexerInformer(config, queue, &sync.Mutex{}, tagPrefix)
+		taintController := crdController.NewIseclHAController(queue, taintIndexer, taintInformer)
+		go taintController.Run(constants.MinThreadiness, stop)
+	}
 
 	defaultLog.Info("Waiting for updates on ISecl Custom Resource Definitions")
 

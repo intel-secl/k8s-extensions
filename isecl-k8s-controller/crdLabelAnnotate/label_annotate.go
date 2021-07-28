@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -51,7 +50,7 @@ type Annotations map[string]string
 //Getk8sClientHelper returns helper object and clientset to fetch node
 func Getk8sClientHelper(config *rest.Config) (APIHelpers, *k8sclient.Clientset) {
 	helper := APIHelpers(K8sHelpers{})
-
+	defaultLog.Info("Getk8sClientHelper %v", helper)
 	cli, err := k8sclient.NewForConfig(config)
 	if err != nil {
 		defaultLog.Errorf("Error while creating k8s client %v", err)
@@ -84,6 +83,9 @@ func (h K8sHelpers) AddLabelsAnnotations(n *corev1.Node, labels Labels, annotati
 //AddTaint applies labels and annotations to the node
 //effect should be one of: NoSchedule, PreferNoSchedule, NoExecute
 func (h K8sHelpers) AddTaint(n *corev1.Node, key string, value string, effect string) error {
+	defaultLog.Trace("crdLabelAnnotate/label_Annotate:AddTaint() Entering AddTaint()")
+	defaultLog.Trace("crdLabelAnnotate/label_Annotate:AddTaint() Leaving AddTaint()")
+
 	taintEffect, ok := map[string]corev1.TaintEffect{
 		"NoSchedule":       corev1.TaintEffectNoSchedule,
 		"PreferNoSchedule": corev1.TaintEffectPreferNoSchedule,
@@ -99,7 +101,7 @@ func (h K8sHelpers) AddTaint(n *corev1.Node, key string, value string, effect st
 		Value:  value,
 		Effect: taintEffect,
 	})
-
+	defaultLog.Trace("crdLabelAnnotate/label_Annotate:AddTaint() Taint added Successfully")
 	return nil
 }
 

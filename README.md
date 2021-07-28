@@ -91,7 +91,9 @@ LOG_LEVEL | `Optional` |`string` | INFO | Determines the log level |
 LOG_MAX_LENGTH | `Optional` |`int` | 1500 | Maximum length of characters in a line in log file |
 TAG_PREFIX | `Optional` | `string` | isecl. | A custom prefix which can be applied to isecl attributes that are pushed from IH. |
 TAINT_UNTRUSTED_NODES | `Optional` | `string` | false | If set to true. NoExec taint applied to the nodes for which trust status is set to false |
-
+TAINT_REGISTERED_NODES | `Optional` | `string` | false | If set to true. NoExec and NoSchedule taint is applied to a new node joining the k8s cluster |
+TAINT_REBOOTED_NODES | `Optional` | `string` | false | If set to true. NoExec and NoSchedule taint is applied to a node, if it's rebooted |
+ 
 * Deploy isecl-controller
 ```console
 kubectl apply -f yamls/isecl-controller.yaml

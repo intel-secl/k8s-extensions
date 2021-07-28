@@ -8,6 +8,7 @@ package crdController
 import (
 	"fmt"
 	commLog "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log"
+	"intel/isecl/k8s-custom-controller/v4/constants"
 	"intel/isecl/k8s-custom-controller/v4/crdLabelAnnotate"
 	ha_schema "intel/isecl/k8s-custom-controller/v4/crdSchema/api/hostattribute/v1beta1"
 	ha_client "intel/isecl/k8s-custom-controller/v4/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
@@ -28,7 +29,11 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-var TaintUntrustedNodes = false
+var (
+	TaintUntrustedNodes  = false
+	TaintRegisteredNodes = false
+	TaintRebootedNodes   = false
+)
 
 const (
 	// lenSGXLabels is the number of SGX Features that are currently supported per node
@@ -126,7 +131,7 @@ func (c *IseclHAController) syncFromQueue(key string) error {
 	} else {
 		// Note that you also have to check the uid if you have a local controlled resource, which
 		// is dependent on the actual instance, to detect that a CRD object was recreated with the same name
-		defaultLog.Infof("Sync/Add/Update for PL CRD Object %#v ", obj)
+		defaultLog.Tracef("Sync/Add/Update for PL CRD Object %#v ", obj)
 		err = c.processPLQueue(key)
 		if err != nil {
 			defaultLog.Fatalf("Error while processing queue %v", err)
@@ -303,10 +308,8 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 			return hacrdclient.HostAttributesCrds(metav1.NamespaceDefault).Watch(options)
 		},
 	}
-
 	//Create a PL CRD Helper object
 	hInf, cli := crdLabelAnnotate.Getk8sClientHelper(config)
-
 	return cache.NewIndexerInformer(listWatch, &ha_schema.HostAttributesCrd{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
@@ -336,4 +339,99 @@ func NewIseclHAIndexerInformer(config *rest.Config, queue workqueue.RateLimiting
 			}
 		},
 	}, cache.Indexers{})
+}
+
+//NewIseclTaintHAIndexerInformer for K8S Node Admission and Tainting
+func NewIseclTaintHAIndexerInformer(config *rest.Config, queue workqueue.RateLimitingInterface, Mutex *sync.Mutex, tagPrefix string) (cache.Indexer, cache.Controller) {
+	// Create a new clientset
+	nodeClient := k8sclient.NewForConfigOrDie(config)
+
+	controllerDeployedTime := metav1.Time{Time: time.Now()}
+
+	nodeWatch := &cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime2.Object, error) {
+			return nodeClient.CoreV1().Events("").List(options)
+		},
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return nodeClient.CoreV1().Events("").Watch(options)
+		},
+	}
+
+	// Create a PL CRD Helper object
+	nodeHelper, cli := crdLabelAnnotate.Getk8sClientHelper(config)
+
+	return cache.NewIndexerInformer(nodeWatch, &corev1.Event{}, 0, cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			event := obj.(*corev1.Event)
+			nodeName := event.InvolvedObject.Name
+			deployTime := &controllerDeployedTime
+			eventLastTimestamp := event.LastTimestamp
+
+			if deployTime.Before(&eventLastTimestamp) {
+				if (TaintRegisteredNodes && event.Reason == constants.NodeRegistered) || (TaintRebootedNodes && event.Reason == constants.NodeRebooted) {
+					TaintNode(Mutex, nodeHelper, nodeName, cli)
+				}
+			}
+		},
+
+		UpdateFunc: func(old interface{}, new interface{}) {
+
+		},
+		DeleteFunc: func(obj interface{}) {
+
+		},
+	}, cache.Indexers{})
+}
+
+//TaintNode adds taint to nodes if the node is joined to the cluster or if the node is rebooted in the cluster
+func TaintNode(Mutex *sync.Mutex, nodeHelper crdLabelAnnotate.APIHelpers, name string, cli *k8sclient.Clientset) {
+	defaultLog.Trace("crdController/isecl_trust_controller:TaintNode() Entering TaintNode()")
+	defer defaultLog.Trace("crdController/isecl_trust_controller:TaintNode() Leaving TaintNode()")
+	for {
+		Mutex.Lock()
+		node, err := nodeHelper.GetNode(cli, name)
+		if err != nil {
+			defaultLog.Errorf("crdController/isecl_trust_controller:TaintNode() Failed to get node within cluster: %v", err.Error())
+		}
+
+		label := node.ObjectMeta.GetLabels()
+		if _, ok := label[constants.MasterNodeLabel]; ok {
+			defaultLog.Error("crdController/isecl_trust_controller:TaintNode() Node is master, skipping Tainting")
+			Mutex.Unlock()
+			return
+		}
+
+		untrustedTaint := corev1.Taint{
+			Key:    "untrusted",
+			Value:  "true",
+			Effect: "NoSchedule",
+		}
+		for _, t := range node.Spec.Taints {
+			if t.MatchTaint(&untrustedTaint) {
+				defaultLog.Error("crdController/isecl_trust_controller:TaintNode() Taint already exists")
+				Mutex.Unlock()
+				return
+			}
+		}
+
+		err = nodeHelper.AddTaint(node, "untrusted", "true", "NoSchedule")
+		if err != nil {
+			defaultLog.Errorf("crdController/isecl_trust_controller:TaintNode() Failed to add NoSchedule taint: %v", err.Error())
+		}
+
+		err = nodeHelper.AddTaint(node, "untrusted", "true", "NoExecute")
+		if err != nil {
+			defaultLog.Errorf("crdController/isecl_trust_controller:TaintNode() Failed to add NoExecute taint: %v", err.Error())
+		}
+
+		err = nodeHelper.UpdateNode(cli, node)
+		if err != nil {
+			defaultLog.Errorf("crdController/isecl_trust_controller:TaintNode() Failed to update node: %v", err.Error())
+		} else {
+			defaultLog.Info("crdController/isecl_trust_controller:TaintNode() Taint added and updated Successfully")
+			Mutex.Unlock()
+			return
+		}
+		Mutex.Unlock()
+	}
 }

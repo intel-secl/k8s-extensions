@@ -22,6 +22,10 @@ rules:
   - apiGroups: [ "" ]
     resources: [ "nodes" ]
     verbs: [ "get", "list", "watch", "update", "patch", "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "get", "list", "watch" ]
+
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -90,6 +94,10 @@ spec:
             runAsGroup: 1001
           env:
             - name: TAINT_UNTRUSTED_NODES
+              value: "false"
+            - name: TAINT_REGISTERED_NODES
+              value: "false"
+            - name: TAINT_REBOOTED_NODES
               value: "false"
             - name: LOG_LEVEL
               value: "INFO"
