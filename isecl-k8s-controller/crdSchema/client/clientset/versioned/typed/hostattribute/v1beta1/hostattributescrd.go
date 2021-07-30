@@ -19,6 +19,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"context"
 	"time"
 
 	v1beta1 "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/api/hostattribute/v1beta1"
@@ -70,7 +71,7 @@ func (c *hostAttributesCrds) Get(name string, options v1.GetOptions) (result *v1
 		Resource("hostattributes").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(context.Background()).
 		Into(result)
 	return
 }
@@ -87,7 +88,7 @@ func (c *hostAttributesCrds) List(opts v1.ListOptions) (result *v1beta1.HostAttr
 		Resource("hostattributes").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(context.Background()).
 		Into(result)
 	return
 }
@@ -104,7 +105,7 @@ func (c *hostAttributesCrds) Watch(opts v1.ListOptions) (watch.Interface, error)
 		Resource("hostattributes").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(context.Background())
 }
 
 // Create takes the representation of a hostAttributesCrd and creates it.  Returns the server's representation of the hostAttributesCrd, and an error, if there is any.
@@ -114,7 +115,7 @@ func (c *hostAttributesCrds) Create(hostAttributesCrd *v1beta1.HostAttributesCrd
 		Namespace(c.ns).
 		Resource("hostattributes").
 		Body(hostAttributesCrd).
-		Do().
+		Do(context.Background()).
 		Into(result)
 	return
 }
@@ -127,7 +128,7 @@ func (c *hostAttributesCrds) Update(hostAttributesCrd *v1beta1.HostAttributesCrd
 		Resource("hostattributes").
 		Name(hostAttributesCrd.Name).
 		Body(hostAttributesCrd).
-		Do().
+		Do(context.Background()).
 		Into(result)
 	return
 }
@@ -139,7 +140,7 @@ func (c *hostAttributesCrds) Delete(name string, options *v1.DeleteOptions) erro
 		Resource("hostattributes").
 		Name(name).
 		Body(options).
-		Do().
+		Do(context.Background()).
 		Error()
 }
 
@@ -155,7 +156,7 @@ func (c *hostAttributesCrds) DeleteCollection(options *v1.DeleteOptions, listOpt
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(options).
-		Do().
+		Do(context.Background()).
 		Error()
 }
 
@@ -168,7 +169,7 @@ func (c *hostAttributesCrds) Patch(name string, pt types.PatchType, data []byte,
 		SubResource(subresources...).
 		Name(name).
 		Body(data).
-		Do().
+		Do(context.Background()).
 		Into(result)
 	return
 }

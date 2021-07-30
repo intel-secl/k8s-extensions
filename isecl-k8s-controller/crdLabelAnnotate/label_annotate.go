@@ -6,6 +6,7 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdLabelAnnotate
 
 import (
+	"context"
 	commLog "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -61,7 +62,7 @@ func Getk8sClientHelper(config *rest.Config) (APIHelpers, *k8sclient.Clientset) 
 //GetNode returns node API based on nodename
 func (h K8sHelpers) GetNode(cli *k8sclient.Clientset, NodeName string) (*corev1.Node, error) {
 	// Get the node object using the node name
-	node, err := cli.CoreV1().Nodes().Get(NodeName, metav1.GetOptions{})
+	node, err := cli.CoreV1().Nodes().Get(context.Background(), NodeName, metav1.GetOptions{})
 	if err != nil {
 		defaultLog.Errorf("Can't get node: %s", err.Error())
 		return nil, err
@@ -144,7 +145,9 @@ func (h K8sHelpers) DeleteTaint(n *corev1.Node, key string, value string, effect
 //UpdateNode updates the node API
 func (h K8sHelpers) UpdateNode(c *k8sclient.Clientset, n *corev1.Node) error {
 	// Send the updated node to the apiserver.
-	_, err := c.CoreV1().Nodes().Update(n)
+	_, err := c.CoreV1().Nodes().Update(context.Background(), n, metav1.UpdateOptions{
+		TypeMeta: n.TypeMeta,
+	})
 	if err != nil {
 		defaultLog.Errorf("Error while updating node label:", err.Error())
 		return err
@@ -155,7 +158,9 @@ func (h K8sHelpers) UpdateNode(c *k8sclient.Clientset, n *corev1.Node) error {
 //DeleteNode updates the node API
 func (h K8sHelpers) DeleteNode(c *k8sclient.Clientset, nodeName string) error {
 	// Send the deleted node to the apiserver.
-	err := c.CoreV1().Nodes().Delete(nodeName, &metav1.DeleteOptions{})
+	err := c.CoreV1().Nodes().Delete(context.Background(), nodeName, metav1.DeleteOptions{
+		TypeMeta: corev1.Node{}.TypeMeta,
+	})
 
 	// Node already deleted
 	if k8serrors.IsNotFound(err) {
