@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "intel/isecl/k8s-custom-controller/v4/crdSchema/client/clientset/versioned"
-	crdv1beta1 "intel/isecl/k8s-custom-controller/v4/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
-	fakecrdv1beta1 "intel/isecl/k8s-custom-controller/v4/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1/fake"
+	clientset "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/clientset/versioned"
+	crdv1beta1 "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
+	fakecrdv1beta1 "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

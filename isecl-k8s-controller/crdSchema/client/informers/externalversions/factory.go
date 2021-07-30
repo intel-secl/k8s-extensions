@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "intel/isecl/k8s-custom-controller/v4/crdSchema/client/clientset/versioned"
-	hostattribute "intel/isecl/k8s-custom-controller/v4/crdSchema/client/informers/externalversions/hostattribute"
-	internalinterfaces "intel/isecl/k8s-custom-controller/v4/crdSchema/client/informers/externalversions/internalinterfaces"
+	versioned "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/clientset/versioned"
+	hostattribute "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/informers/externalversions/hostattribute"
+	internalinterfaces "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

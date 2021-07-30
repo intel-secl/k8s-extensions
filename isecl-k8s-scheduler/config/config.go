@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/intel-secl/k8s-extensions/v4/isecl-k8s-scheduler/constants"
 	"github.com/pkg/errors"
-	"intel/isecl/k8s-extended-scheduler/v4/constants"
 )
 
 var tagPrefixRegex = regexp.MustCompile("(^[a-zA-Z0-9_///.-]*$)")

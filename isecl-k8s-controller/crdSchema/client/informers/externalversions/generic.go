@@ -21,7 +21,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1beta1 "intel/isecl/k8s-custom-controller/v4/crdSchema/api/hostattribute/v1beta1"
+	v1beta1 "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/api/hostattribute/v1beta1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )

@@ -18,7 +18,7 @@ PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 
 # Generate the service binary and executable
 .DEFAULT_GOAL: $(SERVICE)
 $(SERVICE):
-	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/$(SERVICE)/version.Version=$(VERSION) -X intel/isecl/$(SERVICE)/version.GitHash=$(GITCOMMIT)" -o out/$(SERVICE)
+	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X github.com/intel-secl/k8s-extensions/v4/$(SERVICE)/version.Version=$(VERSION) -X github.com/intel-secl/k8s-extensions/v4/$(SERVICE)/version.GitHash=$(GITCOMMIT)" -o out/$(SERVICE)
 
 # Builds the docker image and creates the tar file from the image built
 .PHONY: docker

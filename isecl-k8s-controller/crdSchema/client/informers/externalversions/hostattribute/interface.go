@@ -19,8 +19,8 @@ limitations under the License.
 package hostattribute
 
 import (
-	v1beta1 "intel/isecl/k8s-custom-controller/v4/crdSchema/client/informers/externalversions/hostattribute/v1beta1"
-	internalinterfaces "intel/isecl/k8s-custom-controller/v4/crdSchema/client/informers/externalversions/internalinterfaces"
+	v1beta1 "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/informers/externalversions/hostattribute/v1beta1"
+	internalinterfaces "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

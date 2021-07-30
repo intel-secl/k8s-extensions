@@ -19,7 +19,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	internalinterfaces "intel/isecl/k8s-custom-controller/v4/crdSchema/client/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

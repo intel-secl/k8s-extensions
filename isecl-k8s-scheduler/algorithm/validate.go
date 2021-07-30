@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/Waterdrips/jwt-go"
-	"intel/isecl/k8s-extended-scheduler/v4/constants"
+	"github.com/intel-secl/k8s-extensions/v4/isecl-k8s-scheduler/constants"
 	v1 "k8s.io/api/core/v1"
 )
 

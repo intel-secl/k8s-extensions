@@ -6,12 +6,13 @@ SPDX-License-Identifier: BSD-3-Clause
 package crdController
 
 import (
+	"context"
 	"fmt"
 	commLog "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log"
-	"intel/isecl/k8s-custom-controller/v4/constants"
-	"intel/isecl/k8s-custom-controller/v4/crdLabelAnnotate"
-	ha_schema "intel/isecl/k8s-custom-controller/v4/crdSchema/api/hostattribute/v1beta1"
-	ha_client "intel/isecl/k8s-custom-controller/v4/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
+	"github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/constants"
+	"github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdLabelAnnotate"
+	ha_schema "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/api/hostattribute/v1beta1"
+	ha_client "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"strings"
@@ -350,10 +351,10 @@ func NewIseclTaintHAIndexerInformer(config *rest.Config, queue workqueue.RateLim
 
 	nodeWatch := &cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime2.Object, error) {
-			return nodeClient.CoreV1().Events("").List(options)
+			return nodeClient.CoreV1().Events("").List(context.Background(), options)
 		},
 		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return nodeClient.CoreV1().Events("").Watch(options)
+			return nodeClient.CoreV1().Events("").Watch(context.Background(), options)
 		},
 	}
 

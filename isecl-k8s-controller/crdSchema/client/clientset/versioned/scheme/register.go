@@ -19,7 +19,7 @@ limitations under the License.
 package scheme
 
 import (
-	crdv1beta1 "intel/isecl/k8s-custom-controller/v4/crdSchema/api/hostattribute/v1beta1"
+	crdv1beta1 "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/api/hostattribute/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

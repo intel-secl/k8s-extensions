@@ -14,8 +14,8 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"github.com/Waterdrips/jwt-go"
+	"github.com/intel-secl/k8s-extensions/v4/isecl-k8s-scheduler/constants"
 	"github.com/pkg/errors"
-	"intel/isecl/k8s-extended-scheduler/v4/constants"
 	v1 "k8s.io/api/core/v1"
 	"strings"
 )

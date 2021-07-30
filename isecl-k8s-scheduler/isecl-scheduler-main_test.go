@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
-	"intel/isecl/k8s-extended-scheduler/v4/api"
+	"github.com/intel-secl/k8s-extensions/v4/isecl-k8s-scheduler/api"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,8 +20,9 @@ func TestExtendedScheduler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	testrouter := mux.NewRouter()
+	apiInst := api.FilterHandler{}
 	testrouter.HandleFunc("/", extendedScheduler).Methods("GET")
-	testrouter.HandleFunc("/filter", api.FilterHandler).Methods("POST")
+	testrouter.HandleFunc("/filter", apiInst.Filter).Methods("POST")
 
 	// test POST /filter with empty body
 	req, err := http.NewRequest("POST", "/filter", nil)

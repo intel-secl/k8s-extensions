@@ -3,7 +3,7 @@ DESCRIPTION="ISecL K8S Extensions"
 
 VERSION := "v4.1.0"
 
-.PHONY: scheduler, controller, all, clean
+.PHONY: all, clean
 
 # Install the binary
 installer:

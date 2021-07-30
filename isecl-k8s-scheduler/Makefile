@@ -21,7 +21,7 @@ SERVICE=isecl-k8s-scheduler
 $(SERVICE):
 	env GOSUMDB=off GOPROXY=direct go mod download
 	@rm -f ${GOPATH}/pkg/mod/k8s.io/kubernetes*/plugin/pkg/scheduler/api/zz_generated.deepcopy.go
-	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/$(SERVICE)/version.Version=$(VERSION) -X intel/isecl/$(SERVICE)/version.GitHash=$(GITCOMMIT)" -o out/$(SERVICE)
+	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X github.com/intel-secl/k8s-extensions/v4/$(SERVICE)/version.Version=$(VERSION) -X github.com/intel-secl/k8s-extensions/v4/$(SERVICE)/version.GitHash=$(GITCOMMIT)" -o out/$(SERVICE)
 
 .PHONY: docker
 

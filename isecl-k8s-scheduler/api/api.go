@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"encoding/json"
 	commLog "github.com/intel-secl/intel-secl/v4/pkg/lib/common/log"
-	"intel/isecl/k8s-extended-scheduler/v4/algorithm"
+	"github.com/intel-secl/k8s-extensions/v4/isecl-k8s-scheduler/algorithm"
 	"io/ioutil"
 	"net/http"
 

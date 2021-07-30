@@ -1,5 +1,6 @@
 ---
 stages:
+  - build
   - scan
 
 variables:
@@ -10,6 +11,20 @@ variables:
   https_proxy: "${HTTPS_PROXY}"
   no_proxy: "${NO_PROXY}"
 
+before_script:
+  - git config --global http.proxy "${HTTP_PROXY}"
+  - git config --global https.proxy "${HTTPS_PROXY}"
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@${GITLAB_SERVER}".insteadOf "https://${GITLAB_SERVER}"
+  - cd $CI_PROJECT_DIR
+
+compile:
+  stage: build
+  image: golang:1.14
+  tags:
+    - go
+  script:
+    - make -C isecl-k8s-controller isecl-k8s-controller
+    - make -C isecl-k8s-scheduler isecl-k8s-scheduler
 
 Stylechecker:
     stage: scan

@@ -21,10 +21,10 @@ package v1beta1
 import (
 	time "time"
 
-	hostattributev1beta1 "intel/isecl/k8s-custom-controller/v4/crdSchema/api/hostattribute/v1beta1"
-	versioned "intel/isecl/k8s-custom-controller/v4/crdSchema/client/clientset/versioned"
-	internalinterfaces "intel/isecl/k8s-custom-controller/v4/crdSchema/client/informers/externalversions/internalinterfaces"
-	v1beta1 "intel/isecl/k8s-custom-controller/v4/crdSchema/client/listers/hostattribute/v1beta1"
+	hostattributev1beta1 "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/api/hostattribute/v1beta1"
+	versioned "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/clientset/versioned"
+	internalinterfaces "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/informers/externalversions/internalinterfaces"
+	v1beta1 "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/listers/hostattribute/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
