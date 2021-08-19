@@ -22,9 +22,9 @@ import (
 	"fmt"
 
 	crdv1beta1 "github.com/intel-secl/k8s-extensions/v4/isecl-k8s-controller/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
-	flowcontrol "k8s.io/client-go/config/flowcontrol"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
+	flowcontrol "k8s.io/client-go/util/flowcontrol"
 )
 
 type Interface interface {

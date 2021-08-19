@@ -19,7 +19,7 @@ before_script:
 
 compile:
   stage: build
-  image: golang:1.14
+  image: golang:1.16
   tags:
     - go
   script:
