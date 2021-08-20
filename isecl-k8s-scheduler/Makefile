@@ -9,7 +9,7 @@
 SHELL:=/bin/bash
 GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
-VERSION := $(or ${GITTAG}, v0.0.0)
+VERSION := "v3.6.1"
 DESCRIPTION="ISecL K8S Extended Scheduler"
 GOPATH := $(shell go env GOPATH)
 PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)

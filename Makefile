@@ -2,7 +2,7 @@
 DESCRIPTION="ISecL K8S Extensions"
 
 GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
-VERSION := $(or ${GITTAG}, v0.0.0)
+VERSION := "v3.6.1"
 
 .PHONY: scheduler, controller, all, clean
 
