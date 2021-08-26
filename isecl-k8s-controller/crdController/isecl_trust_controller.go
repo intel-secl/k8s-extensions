@@ -273,12 +273,18 @@ func AddHostAttributesTabObj(haobj *ha_schema.HostAttributesCrd, helper crdLabel
 			if !ele.Trusted {
 				// Taint the node with no execute
 				if err = helper.AddTaint(node, "untrusted", "true", "NoExecute"); err != nil {
-					defaultLog.Errorf("Unable to add taints: %s", err.Error())
+					defaultLog.Errorf("Unable to add NoExecute taints: %s", err.Error())
+				}
+				if err = helper.AddTaint(node, "untrusted", "true", "NoSchedule"); err != nil {
+					defaultLog.Errorf("Unable to add NoSchedule taints: %s", err.Error())
 				}
 			} else {
 				//Remove Taint from node with no execute
 				if err = helper.DeleteTaint(node, "untrusted", "true", "NoExecute"); err != nil {
-					defaultLog.Errorf("Unable to delete taints: %s", err.Error())
+					defaultLog.Errorf("Unable to delete NoExecute taints: %s", err.Error())
+				}
+				if err = helper.DeleteTaint(node, "untrusted", "true", "NoSchedule"); err != nil {
+					defaultLog.Errorf("Unable to delete NoSchedule taints: %s", err.Error())
 				}
 			}
 		}
