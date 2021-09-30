@@ -75,7 +75,7 @@ spec:
                   operator: Exists
       containers:
         - name: isecl-scheduler
-          image: isecl/k8s-scheduler
+          image: <k8s-scheduler-image-name>:<image-tag>
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 1001

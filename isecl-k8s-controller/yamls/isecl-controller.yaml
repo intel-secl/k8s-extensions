@@ -87,7 +87,7 @@ spec:
                     operator: Exists
       containers:
         - name: isecl-controller
-          image: isecl/k8s-controller
+          image: <k8s-controller-image-name>:<image-tag>
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 1001
