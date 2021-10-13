@@ -20,9 +20,9 @@ package versioned
 
 import (
 	"fmt"
+	"k8s.io/client-go/util/flowcontrol"
 
 	crdv1beta1 "intel/isecl/k8s-custom-controller/v4/crdSchema/client/clientset/versioned/typed/hostattribute/v1beta1"
-	flowcontrol "k8s.io/client-go/config/flowcontrol"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 )
