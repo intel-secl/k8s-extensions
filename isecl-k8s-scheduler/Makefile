@@ -8,7 +8,7 @@
 
 SHELL:=/bin/bash
 GITCOMMIT := $(shell git describe --always)
-VERSION := "v4.0.0"
+VERSION := "v4.0.1"
 DESCRIPTION="ISecL K8S Extended Scheduler"
 GOPATH := $(shell go env GOPATH)
 PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
