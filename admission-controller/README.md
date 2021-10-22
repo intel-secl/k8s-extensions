@@ -87,7 +87,7 @@ Copy the tar file obtained to the private registry using skopeo copy command. ex
 skopeo copy oci-archive: node-tainting-webhook-v1.tar docker://10.105.168.18:5000/node-tainting-webhook:v1 --dest-tls-verify=false
 ```
 
-### Update the image in deployment.yaml
+### Update the image in admission-controller.yaml, example
 
 image: 10.105.168.18:5000/node-tainting-webhook:v1
 

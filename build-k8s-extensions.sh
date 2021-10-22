@@ -18,4 +18,4 @@ make all
 cd $CURR_DIR
 sed -i 's/image: isecl\/k8s-controller.*/image: isecl\/k8s-controller:'${TAG}'/g' isecl-k8s-controller/yamls/isecl-controller.yaml
 sed -i 's/image: isecl\/k8s-scheduler.*/image: isecl\/k8s-scheduler:'${TAG}'/g' isecl-k8s-scheduler/yamls/isecl-scheduler.yaml
-sed -i 's/image: isecl\/k8s-admission-controller.*/image: isecl\/k8s-admission-controller:'${TAG}'/g' admission-controller/yamls/deployment.yaml
+sed -i 's/image: isecl\/k8s-admission-controller.*/image: isecl\/k8s-admission-controller:'${TAG}'/g' admission-controller/yamls/admission-controller.yaml
