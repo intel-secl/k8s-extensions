@@ -1,0 +1,13 @@
+#/*
+# * Copyright (C) 2021 Intel Corporation
+# * SPDX-License-Identifier: BSD-3-Clause
+# */
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: node-tainting-webhook-tls
+type: Opaque
+data:
+  tls.crt:
+  tls.key:

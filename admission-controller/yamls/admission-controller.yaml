@@ -1,0 +1,116 @@
+#/*
+# * Copyright (C) 2021 Intel Corporation
+# * SPDX-License-Identifier: BSD-3-Clause
+# */
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-tainting-webhook
+  namespace: isecl
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-tainting-webhook
+rules:
+  - apiGroups: [""]
+    resources: ["nodes","nodes/status","nodes/metrics"]
+    verbs: ["post","get", "list", "watch", "update", "patch", "delete"]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-tainting-webhook
+subjects:
+  - kind: ServiceAccount
+    name: node-tainting-webhook
+    namespace: isecl
+roleRef:
+  kind: ClusterRole
+  name: node-tainting-webhook
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-tainting-webhook
+  namespace: isecl
+spec:
+  selector:
+    app: node-tainting-webhook
+  ports:
+    - port: 443
+      targetPort: tls
+      name: application
+    - port: 80
+      targetPort: metrics
+      name: metrics
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-tainting-webhook
+  namespace: isecl
+  labels:
+    app: node-tainting-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-tainting-webhook
+  template:
+    metadata:
+      labels:
+        app: node-tainting-webhook
+    spec:
+      initContainers:
+        - image: busybox:latest
+          name: chmod-pg-data
+          command:
+            - /bin/chown
+            - -R
+            - "1001"
+            - /var/log/isecl-k8s-extensions
+          volumeMounts:
+            - name: admission-controller-log
+              mountPath: /var/log/isecl-k8s-extensions
+      securityContext:
+        fsGroup: 1001
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: node-tainting-webhook
+      containers:
+        - name: server
+          image: <k8s-admission-controller-image-name>:<image-tag>
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8889
+              name: tls
+            - containerPort: 80
+              name: metrics
+          env:
+            - name: PORT
+              value: "8889"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: LOG_MAX_LENGTH
+              value: "1500"
+          volumeMounts:
+            - name: webhook-tls-certs
+              mountPath: /etc/webhook/certs/
+              readOnly: true
+            - mountPath: /var/log/isecl-k8s-extensions
+              name: admission-controller-log
+      volumes:
+        - name: webhook-tls-certs
+          secret:
+            secretName: node-tainting-webhook-tls
+        - hostPath:
+            path: /var/log/isecl-k8s-extensions
+            type: DirectoryOrCreate
+          name: admission-controller-log
+

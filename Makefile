@@ -13,8 +13,10 @@ installer:
 	cp -r certificate-generation-scripts/* out/isecl-k8s-extensions/
 	cp isecl-k8s-scheduler/out/*.tar out/isecl-k8s-extensions/
 	cp isecl-k8s-controller/out/*.tar out/isecl-k8s-extensions/
+	cp admission-controller/out/*.tar out/isecl-k8s-extensions/
 	cp -r isecl-k8s-controller/yamls/* out/isecl-k8s-extensions/yamls
 	cp -r isecl-k8s-scheduler/yamls/* out/isecl-k8s-extensions/yamls
+	cp -r admission-controller/yamls/* out/isecl-k8s-extensions/yamls
 	cp -r isecl-k8s-scheduler/config-files/*  out/isecl-k8s-extensions/
 	cd out && tar -zcvf isecl-k8s-extensions-$(VERSION).tar.gz isecl-k8s-extensions
 
@@ -25,4 +27,5 @@ all: clean installer
 clean:
 	rm -rf out
 	rm -rf isecl-k8s-scheduler/out/
-	rm -rf isecl-k8s-controller/out/ 
+	rm -rf isecl-k8s-controller/out/
+	rm -rf admission-controller/out/ 
