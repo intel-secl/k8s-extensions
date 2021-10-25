@@ -28,7 +28,7 @@ docker: $(SERVICE)
 ifeq ($(PROXY_EXISTS),1)
 	docker build --no-cache -t isecl/k8s-controller:$(VERSION) --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -f ./dist/docker/Dockerfile ./out
 else
-	docker build --no-cache -t isecl/k8s-controller:$(VERSION)  -f ./dist/docker/Dockerfile ./out
+	docker build --no-cache -t isecl/k8s-controller:$(VERSION) --network host -f ./dist/docker/Dockerfile ./out
 endif
 
 oci-archive: docker
