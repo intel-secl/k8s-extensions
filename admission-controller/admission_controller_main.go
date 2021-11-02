@@ -234,10 +234,11 @@ func HandleMutate(w http.ResponseWriter, r *http.Request) {
 	admissionReviewResponse.Response.Patch = patchBytes
 	bytes, err := json.Marshal(&admissionReviewResponse)
 	if err != nil {
-		defaultLog.Errorf("marshaling response: %v", err)
+		defaultLog.Errorf("Error while marshaling response: %v", err)
 		return
 	}
 
+	w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 	w.Write(bytes)
 	defaultLog.Infof("Successfully added taint to Node %v", node.Name)
 }
