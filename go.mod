@@ -12,3 +12,5 @@ require (
 	k8s.io/client-go v0.21.3
 	k8s.io/kube-scheduler v0.21.3
 )
+
+replace github.com/intel-secl/intel-secl/v4 => github.com/intel-secl/intel-secl/v4 v4.1.0-Beta
