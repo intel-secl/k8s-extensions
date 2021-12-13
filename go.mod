@@ -7,10 +7,10 @@ require (
 	github.com/intel-secl/intel-secl/v4 v4.1.0-Beta
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
-	k8s.io/api v0.21.3
-	k8s.io/apimachinery v0.21.3
-	k8s.io/client-go v0.21.3
-	k8s.io/kube-scheduler v0.21.3
+	k8s.io/api v0.22.4
+	k8s.io/apimachinery v0.22.4
+	k8s.io/client-go v0.22.4
+	k8s.io/kube-scheduler v0.22.4
 )
 
 replace github.com/intel-secl/intel-secl/v4 => github.com/intel-secl/intel-secl/v4 v4.1.0-Beta

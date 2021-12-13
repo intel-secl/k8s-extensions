@@ -32,7 +32,7 @@ import (
 	"syscall"
 	"time"
 
-	"k8s.io/api/admission/v1beta1"
+	admission "k8s.io/api/admission/v1"
 )
 
 type patchOperation struct {
@@ -165,7 +165,7 @@ func HandleMutate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var admissionReviewReq v1beta1.AdmissionReview
+	var admissionReviewReq admission.AdmissionReview
 
 	//To convert the request body into struct
 	if _, _, err := universalDeserializer.Decode(body, nil, &admissionReviewReq); err != nil {
@@ -224,8 +224,8 @@ func HandleMutate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	admissionReviewResponse := v1beta1.AdmissionReview{
-		Response: &v1beta1.AdmissionResponse{
+	admissionReviewResponse := admission.AdmissionReview{
+		Response: &admission.AdmissionResponse{
 			UID:     admissionReviewReq.Request.UID,
 			Allowed: true,
 		},
