@@ -1,7 +1,7 @@
 # ISecL K8S Extensions
 DESCRIPTION="ISecL K8S Extensions"
 
-VERSION := "v4.1.0"
+VERSION := "v4.2.0"
 
 .PHONY: all, clean
 
