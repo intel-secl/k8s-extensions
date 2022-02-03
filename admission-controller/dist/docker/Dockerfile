@@ -3,7 +3,7 @@
 # * SPDX-License-Identifier: BSD-3-Clause
 # */
 
-FROM centos:8
+FROM ubuntu:focal
 
 COPY isecl-k8s-admission-controller /usr/local/bin/isecl-k8s-admission-controller
 RUN chmod +x /usr/local/bin/isecl-k8s-admission-controller
