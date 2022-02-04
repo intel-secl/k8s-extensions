@@ -1,7 +1,7 @@
 # ISecL K8S Extensions
 DESCRIPTION="ISecL K8S Extensions"
 
-VERSION := "v4.0.1"
+VERSION := "v4.0.2"
 
 .PHONY: scheduler, controller, all, clean
 
