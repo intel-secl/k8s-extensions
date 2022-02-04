@@ -7,7 +7,7 @@
 
 SHELL:=/bin/bash
 GITCOMMIT := $(shell git describe --always)
-VERSION := "v4.1.0"
+VERSION := "v4.1.1"
 DESCRIPTION="ISecL K8S Admission Controller"
 
 SERVICE=isecl-k8s-admission-controller
