@@ -32,7 +32,7 @@ func GetClientConfig(kubeconfig string) (*rest.Config, error) {
 	return clientcmd.BuildConfigFromFlags("", kubeconfig)
 }
 
-const logFilePath = "/var/log/isecl-k8s-extensions/isecl-controller.log"
+const logFilePath = "/var/log/isecl-k8s-controller/isecl-controller.log"
 
 var (
 	defaultLog     = commLog.GetDefaultLogger()
