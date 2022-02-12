@@ -9,7 +9,7 @@ const (
 	LogLevelEnv     = "LOG_LEVEL"
 	LogMaxLengthEnv = "LOG_MAX_LENGTH"
 	PortEnv         = "PORT"
-	HttpLogFile     = "/var/log/isecl-k8s-extensions/isecl-admission-controller-http.log"
+	HttpLogFile     = "/var/log/admission-controller/admission-controller-http.log"
 )
 
 const (
