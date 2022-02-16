@@ -13,4 +13,4 @@ require (
 	k8s.io/kube-scheduler v0.22.4
 )
 
-replace github.com/intel-secl/intel-secl/v4 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v4 v4.2/develop
+replace github.com/intel-secl/intel-secl/v4 => github.com/intel-innersource/applications.security.isecl.intel-secl/v4 v4.2/develop
