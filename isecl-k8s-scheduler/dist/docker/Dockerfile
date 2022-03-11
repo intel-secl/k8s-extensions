@@ -5,7 +5,7 @@
 
 FROM ubuntu:focal
 
-RUN mkdir -p /var/log/isecl-k8s-extensions
+RUN mkdir -p /var/log/isecl-k8s-scheduler
 
 COPY isecl-k8s-scheduler /isecl-k8s-scheduler
 

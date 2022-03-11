@@ -57,10 +57,10 @@ spec:
             - /bin/chown
             - -R
             - "1001"
-            - /var/log/isecl-k8s-extensions
+            - /var/log/isecl-k8s-scheduler
           volumeMounts:
             - name: scheduler-log
-              mountPath: /var/log/isecl-k8s-extensions
+              mountPath: /var/log/isecl-k8s-scheduler
       tolerations:
         - key: node-role.kubernetes.io/master
           operator: Exists
@@ -96,14 +96,14 @@ spec:
             - name: TLS_KEY_PATH
               value: "/opt/isecl-k8s-extensions/server.key"
           volumeMounts:
-          - mountPath: /var/log/isecl-k8s-extensions
+          - mountPath: /var/log/isecl-k8s-scheduler
             name: scheduler-log
           - name: scheduler-certs
             mountPath: /opt/isecl-k8s-extensions/
             readOnly: true
       volumes:
         - hostPath:
-            path: /var/log/isecl-k8s-extensions
+            path: /var/log/isecl-k8s-scheduler
             type: DirectoryOrCreate
           name: scheduler-log
         - name: scheduler-certs

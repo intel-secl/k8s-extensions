@@ -70,10 +70,10 @@ spec:
             - /bin/chown
             - -R
             - "1001"
-            - /var/log/isecl-k8s-extensions
+            - /var/log/isecl-k8s-controller
           volumeMounts:
             - name: controller-log
-              mountPath: /var/log/isecl-k8s-extensions
+              mountPath: /var/log/isecl-k8s-controller
       tolerations:
         - key: node-role.kubernetes.io/master
           operator: Exists
@@ -106,10 +106,10 @@ spec:
             - name: TAG_PREFIX
               value: "isecl."
           volumeMounts:
-            - mountPath: /var/log/isecl-k8s-extensions
+            - mountPath: /var/log/isecl-k8s-controller
               name: controller-log
       volumes:
         - hostPath:
-            path: /var/log/isecl-k8s-extensions
+            path: /var/log/isecl-k8s-controller
             type: DirectoryOrCreate
           name: controller-log

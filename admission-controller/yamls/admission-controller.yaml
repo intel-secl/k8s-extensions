@@ -74,10 +74,10 @@ spec:
             - /bin/chown
             - -R
             - "1001"
-            - /var/log/isecl-k8s-extensions
+            - /var/log/admission-controller
           volumeMounts:
             - name: admission-controller-log
-              mountPath: /var/log/isecl-k8s-extensions
+              mountPath: /var/log/admission-controller
       securityContext:
         fsGroup: 1001
       nodeSelector:
@@ -103,14 +103,14 @@ spec:
             - name: webhook-tls-certs
               mountPath: /etc/webhook/certs/
               readOnly: true
-            - mountPath: /var/log/isecl-k8s-extensions
+            - mountPath: /var/log/admission-controller
               name: admission-controller-log
       volumes:
         - name: webhook-tls-certs
           secret:
             secretName: node-tainting-webhook-tls
         - hostPath:
-            path: /var/log/isecl-k8s-extensions
+            path: /var/log/admission-controller
             type: DirectoryOrCreate
           name: admission-controller-log
 
