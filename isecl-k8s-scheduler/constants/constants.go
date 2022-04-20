@@ -7,8 +7,8 @@ package constants
 
 const (
 	InstallPath = "/opt/isecl-k8s-extensions/"
-	LogFilePath = "/var/log/isecl-k8s-extensions/isecl-scheduler.log"
-	HttpLogFile = "/var/log/isecl-k8s-extensions/isecl-k8s-scheduler-http.log"
+	LogFilePath = "/var/log/isecl-k8s-scheduler/isecl-scheduler.log"
+	HttpLogFile = "/var/log/isecl-k8s-scheduler/isecl-k8s-scheduler-http.log"
 	FilePerms   = 0664
 )
 

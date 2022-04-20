@@ -47,7 +47,7 @@ var (
 
 var configuration *rest.Config
 
-const logFilePath = "/var/log/isecl-k8s-extensions/isecl-admission-controller.log"
+const logFilePath = "/var/log/admission-controller/admission-controller.log"
 
 var (
 	defaultLog = commLog.GetDefaultLogger()
